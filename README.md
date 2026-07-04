@@ -9,8 +9,7 @@ Simple sellable template version of the finance dashboard.
 - Budget balance charts on the dashboard
 - Filters by date, multiple main categories, multiple subcategories, and account
 - Add transaction form
-- Categories setup for Bills, Monthly Expenses, and Income subcategories
-- Accounts setup page
+- Categories setup for Bills, Monthly Expenses, Income subcategories, and accounts
 - Firebase-ready config and auth gate
 - LocalStorage demo datastore so the app works before Firebase is connected
 
@@ -33,8 +32,8 @@ After login, check whether the user's email exists and is active before showing 
 
 - `index.html` - dashboard
 - `add-transaction.html` - transaction entry
-- `budget.html` - categories setup
-- `accounts.html` - accounts setup
+- `budget.html` - categories and accounts setup
+- `accounts.html` - legacy direct accounts setup page
 - `app.js` - shared helpers, navigation, auth placeholder
 - `store.js` - local datastore, later replace/sync with Firestore
 - `dashboard.js` - dashboard charts and filters

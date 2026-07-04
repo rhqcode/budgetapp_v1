@@ -41,8 +41,8 @@ const defaultData = {
     demoDataVersion: DEMO_DATA_VERSION
   },
   accounts: [
-    { id: crypto.randomUUID(), name: "Main Bank", type: "Bank", openingBalance: 2500 },
-    { id: crypto.randomUUID(), name: "Credit Card", type: "Credit Card", openingBalance: -300 }
+    { id: crypto.randomUUID(), name: "Main Bank", type: "Bank" },
+    { id: crypto.randomUUID(), name: "Credit Card", type: "Credit Card" }
   ],
   budgets: buildDemoBudgets(),
   incomeSubCategories: ["Salary", "Bonus", "Dividend", "Interest", "Side Income"],

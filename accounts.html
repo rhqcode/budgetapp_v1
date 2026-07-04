@@ -13,7 +13,7 @@
     <header class="topbar">
       <div>
         <h1 class="page-title">Accounts Setup</h1>
-        <p class="page-subtitle">Accounts and opening balances</p>
+        <p class="page-subtitle">Accounts for transaction tracking</p>
       </div>
     </header>
 
@@ -21,7 +21,7 @@
       <div class="card-header">
         <h2 class="card-title">User Notes</h2>
       </div>
-      <p class="muted">Add every bank, cash, credit card, or investment account you want to track. Opening balances are used as the starting point before new transactions are recorded.</p>
+      <p class="muted">Add every bank, cash, credit card, or investment account you want to track. Accounts feed the Add Transaction dropdown and dashboard filters.</p>
     </section>
 
     <section class="grid" style="margin-top:16px;">
@@ -43,12 +43,7 @@
               <option>Investment</option>
             </select>
           </div>
-          <div class="form-field">
-            <label>Opening Balance</label>
-            <input type="number" step="0.01" id="openingBalance" value="0">
-          </div>
-          <div class="form-field">
-            <label>&nbsp;</label>
+          <div class="form-field full">
             <button class="primary-btn" type="submit">Add Account</button>
           </div>
         </form>

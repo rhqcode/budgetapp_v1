@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("billsForm").addEventListener("submit", event => saveBudgetForm(event, "Bills"));
   document.getElementById("monthlyForm").addEventListener("submit", event => saveBudgetForm(event, "Monthly Expenses"));
   document.getElementById("incomeSubForm").addEventListener("submit", saveIncomeSubForm);
+  document.getElementById("accountForm").addEventListener("submit", saveAccountForm);
   renderBudgetPage();
 });
 
@@ -28,11 +29,23 @@ function saveIncomeSubForm(event) {
   setStatus("Income sub category saved");
 }
 
+function saveAccountForm(event) {
+  event.preventDefault();
+  upsertAccount({
+    name: document.getElementById("accountName").value.trim(),
+    type: document.getElementById("accountType").value
+  });
+  event.target.reset();
+  renderBudgetPage();
+  setStatus("Account saved");
+}
+
 function renderBudgetPage() {
   const data = loadData();
   renderBudgetTable("billsTable", data.budgets.filter(item => item.mainCategory === "Bills"));
   renderBudgetTable("monthlyTable", data.budgets.filter(item => item.mainCategory === "Monthly Expenses"));
   renderIncomeSubTable(data.incomeSubCategories);
+  renderAccountsTable(data.accounts);
 }
 
 function renderBudgetTable(tableId, budgets) {
@@ -60,6 +73,19 @@ function renderIncomeSubTable(incomeSubCategories) {
   `;
 }
 
+function renderAccountsTable(accounts) {
+  document.getElementById("accountsTable").innerHTML = `
+    <tr><th>Name</th><th>Type</th><th></th></tr>
+    ${accounts.map(item => `
+      <tr>
+        <td>${item.name}</td>
+        <td>${item.type}</td>
+        <td><button class="danger-btn" onclick="removeAccount('${item.id}')">Delete</button></td>
+      </tr>
+    `).join("")}
+  `;
+}
+
 function removeBudget(id) {
   deleteBudget(id);
   renderBudgetPage();
@@ -67,5 +93,10 @@ function removeBudget(id) {
 
 function removeIncomeSub(name) {
   deleteIncomeSubCategory(name);
+  renderBudgetPage();
+}
+
+function removeAccount(id) {
+  deleteAccount(id);
   renderBudgetPage();
 }

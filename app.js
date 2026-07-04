@@ -81,7 +81,6 @@ function shellMarkup(activePage) {
         <a href="index.html" data-page="dashboard">Dashboard</a>
         <a href="add-transaction.html" data-page="transaction">Add Transaction</a>
         <a href="budget.html" data-page="budget">Categories Setup</a>
-        <a href="accounts.html" data-page="accounts">Accounts Setup</a>
       </nav>
       <p id="status" class="sidebar-status"></p>
     </aside>

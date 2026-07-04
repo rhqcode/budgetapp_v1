@@ -13,7 +13,7 @@
     <header class="topbar">
       <div>
         <h1 class="page-title">Categories Setup</h1>
-        <p class="page-subtitle">Bills, monthly expenses, and income subcategories</p>
+        <p class="page-subtitle">Bills, monthly expenses, income subcategories, and accounts</p>
       </div>
     </header>
 
@@ -76,9 +76,34 @@
 
       <div class="card">
         <div class="card-header">
+          <h2 class="card-title">Accounts</h2>
+        </div>
+        <form id="accountForm" class="form-grid" style="margin-bottom:14px;">
+          <div class="form-field">
+            <label>Name</label>
+            <input id="accountName" required>
+          </div>
+          <div class="form-field">
+            <label>Type</label>
+            <select id="accountType">
+              <option>Bank</option>
+              <option>Cash</option>
+              <option>Credit Card</option>
+              <option>Investment</option>
+            </select>
+          </div>
+          <div class="form-field full">
+            <button class="primary-btn" type="submit">Add Account</button>
+          </div>
+        </form>
+        <table id="accountsTable"></table>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
           <h2 class="card-title">User Notes</h2>
         </div>
-        <p class="muted">Use Bills for fixed recurring commitments and Monthly Expenses for flexible spending. These categories feed the Add Transaction dropdowns and dashboard filters.</p>
+        <p class="muted">Use Bills for fixed recurring commitments and Monthly Expenses for flexible spending. Accounts and categories feed the Add Transaction dropdowns and dashboard filters.</p>
       </div>
     </section>
   </main>

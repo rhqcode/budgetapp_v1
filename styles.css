@@ -429,6 +429,22 @@ table {
   border-collapse: collapse;
 }
 
+.compact-table {
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.compact-table th,
+.compact-table td {
+  overflow-wrap: anywhere;
+}
+
+.budget-balance-table th,
+.budget-balance-table td {
+  padding: 8px 6px;
+  font-size: 12px;
+}
+
 th,
 td {
   padding: 10px;
