@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BudgetApp Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle">Income and expenses overview</p>
+      </div>
+    </header>
+
+    <section class="filters">
+      <input type="date" id="fromDate">
+      <input type="date" id="toDate">
+      <div class="filter-dropdown">
+        <button class="filter-button" type="button" onclick="toggleFilterMenu('mainCategoryMenu')">
+          <span id="mainCategoryFilterLabel">All main categories</span>
+          <span>v</span>
+        </button>
+        <div class="filter-menu" id="mainCategoryMenu"></div>
+      </div>
+      <div class="filter-dropdown">
+        <button class="filter-button" type="button" onclick="toggleFilterMenu('categoryMenu')">
+          <span id="categoryFilterLabel">All sub categories</span>
+          <span>v</span>
+        </button>
+        <div class="filter-menu" id="categoryMenu"></div>
+      </div>
+      <select id="accountFilter"></select>
+      <button class="ghost-btn" onclick="clearDashboardFilters()">Clear</button>
+    </section>
+    <div id="filterSummary" class="filter-summary">No category filters selected</div>
+
+    <section class="card user-note-card">
+      <div class="card-header">
+        <h2 class="card-title">User Notes</h2>
+      </div>
+      <p class="muted">Use the date, account, and category filters together to inspect spending patterns. Spending Breakdown excludes income, while the historical and net cashflow charts include both income and expenses.</p>
+    </section>
+
+    <section class="grid three" style="margin-top:16px;">
+      <div class="card">
+        <div class="kpi-label">Income</div>
+        <div class="kpi-value positive" id="incomeTotal">$0</div>
+      </div>
+      <div class="card">
+        <div class="kpi-label">Expenses</div>
+        <div class="kpi-value negative" id="expenseTotal">$0</div>
+      </div>
+      <div class="card">
+        <div class="kpi-label">Net Cashflow</div>
+        <div class="kpi-value" id="netTotal">$0</div>
+      </div>
+    </section>
+
+    <section class="grid two" style="margin-top:16px;">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Historical Income vs Expenses</h2>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="historicalChart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Monthly Net Cashflow</h2>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="monthlyChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid two" style="margin-top:16px;">
+      <div class="card category-breakdown-card">
+        <div class="card-header">
+          <h2 class="card-title">Spending Breakdown</h2>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="categoryChart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Spending Insights</h2>
+        </div>
+        <div class="category-text-list" id="categoryTextBreakdown"></div>
+      </div>
+    </section>
+
+    <section class="grid two" style="margin-top:16px;">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Budget vs Spent This Month</h2>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="budgetChart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Budget Balance</h2>
+        </div>
+        <table id="budgetBalanceTable"></table>
+      </div>
+    </section>
+
+    <section class="card" style="margin-top:16px;">
+      <div class="card-header">
+        <h2 class="card-title">Recent Transactions</h2>
+      </div>
+      <table id="recentTransactionsTable"></table>
+    </section>
+  </main>
+
+  <script src="firebase-config.js"></script>
+  <script src="store.js"></script>
+  <script src="app.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>

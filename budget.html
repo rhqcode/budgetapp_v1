@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Categories Setup</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <h1 class="page-title">Categories Setup</h1>
+        <p class="page-subtitle">Bills, monthly expenses, and income subcategories</p>
+      </div>
+    </header>
+
+    <section class="grid two">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Bills</h2>
+        </div>
+        <form id="billsForm" class="form-grid" style="margin-bottom:14px;">
+          <div class="form-field">
+            <label>Sub Category</label>
+            <input id="billsSubCategory" required>
+          </div>
+          <div class="form-field">
+            <label>Monthly Amount</label>
+            <input type="number" step="0.01" id="billsAmount" required>
+          </div>
+          <div class="form-field full">
+            <button class="primary-btn" type="submit">Add Bill Category</button>
+          </div>
+        </form>
+        <table id="billsTable"></table>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Monthly Expenses</h2>
+        </div>
+        <form id="monthlyForm" class="form-grid" style="margin-bottom:14px;">
+          <div class="form-field">
+            <label>Sub Category</label>
+            <input id="monthlySubCategory" required>
+          </div>
+          <div class="form-field">
+            <label>Monthly Amount</label>
+            <input type="number" step="0.01" id="monthlyAmount" required>
+          </div>
+          <div class="form-field full">
+            <button class="primary-btn" type="submit">Add Monthly Category</button>
+          </div>
+        </form>
+        <table id="monthlyTable"></table>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Income Sub Categories</h2>
+        </div>
+        <form id="incomeSubForm" class="form-grid" style="margin-bottom:14px;">
+          <div class="form-field full">
+            <label>Income Sub Category</label>
+            <input id="incomeSubCategory" placeholder="Salary, Bonus, Dividend">
+          </div>
+          <div class="form-field full">
+            <button class="primary-btn" type="submit">Add Income Sub Category</button>
+          </div>
+        </form>
+        <table id="incomeSubTable"></table>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">User Notes</h2>
+        </div>
+        <p class="muted">Use Bills for fixed recurring commitments and Monthly Expenses for flexible spending. These categories feed the Add Transaction dropdowns and dashboard filters.</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="firebase-config.js"></script>
+  <script src="store.js"></script>
+  <script src="app.js"></script>
+  <script src="budget.js"></script>
+</body>
+</html>
