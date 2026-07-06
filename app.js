@@ -1,4 +1,16 @@
-function formatMoney(value) {
+import { initializeApp } from 'firebase/app';
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  onAuthStateChanged,
+  signOut as fbSignOut
+} from 'firebase/auth';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { loadData } from './store.js';
+import { BUDGETAPP_FIREBASE_CONFIG, BUDGETAPP_SETTINGS } from './firebase-config.js';
+
+export function formatMoney(value) {
   const { profile } = loadData();
   return new Intl.NumberFormat("en-SG", {
     style: "currency",
@@ -7,40 +19,130 @@ function formatMoney(value) {
   }).format(Number(value) || 0);
 }
 
-function parseAmount(value) {
+export function parseAmount(value) {
   return Math.abs(Number(value) || 0);
 }
 
-function setStatus(message) {
+export function setStatus(message) {
   const status = document.getElementById("status");
   if (status) status.textContent = message;
 }
 
-function initShell(activePage) {
+function initShell(activePage, authResult) {
   document.querySelectorAll("[data-page]").forEach(link => {
     link.classList.toggle("active", link.dataset.page === activePage);
   });
 
   const data = loadData();
   const profileName = document.getElementById("profileName");
-  if (profileName) profileName.textContent = data.profile.displayName || "BudgetApp";
 
-  setStatus("Demo storage active");
+  if (authResult?.mode === "firebase") {
+    if (profileName) profileName.textContent = authResult.user.displayName || "User";
+    setStatus(`Signed in as ${authResult.user.email}`);
+  } else {
+    if (profileName) profileName.textContent = data.profile.displayName || "BudgetApp";
+    setStatus("Demo storage active");
+  }
 }
 
 async function initAuthGate() {
-  const settings = window.BUDGETAPP_SETTINGS || {};
+  const settings = BUDGETAPP_SETTINGS;
   if (!settings.enableFirebase) return { allowed: true, mode: "demo" };
 
-  // Firebase implementation hook:
-  // 1. initializeApp(window.BUDGETAPP_FIREBASE_CONFIG)
-  // 2. sign in with Google provider
-  // 3. read allowedUsers/{email}
-  // 4. block app if active !== true
-  return { allowed: false, mode: "firebase-not-configured" };
+  return new Promise((resolve) => {
+    showAuthOverlay("loading");
+
+    const app = initializeApp(BUDGETAPP_FIREBASE_CONFIG);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        if (settings.requireWhitelist) {
+          try {
+            const db = getFirestore(app);
+            const snap = await getDoc(doc(db, "allowedUsers", user.email));
+            if (!snap.exists() || snap.data().active !== true) {
+              showAuthOverlay("denied", user.email);
+              return;
+            }
+          } catch (err) {
+            showAuthOverlay("error", null, err.message);
+            return;
+          }
+        }
+        hideAuthOverlay();
+        resolve({ allowed: true, mode: "firebase", user });
+      } else {
+        showAuthOverlay("signin", null, null, () => {
+          signInWithPopup(auth, provider).catch(err => {
+            if (err.code !== "auth/popup-closed-by-user") {
+              showAuthOverlay("error", null, err.message);
+            }
+          });
+        });
+      }
+    });
+  });
 }
 
-function getCategories(type = null) {
+function showAuthOverlay(state, email, errorMessage, onSignIn) {
+  let overlay = document.getElementById("authOverlay");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "authOverlay";
+    document.body.appendChild(overlay);
+  }
+
+  let content = "";
+  if (state === "loading") {
+    content = `
+      <div class="auth-card">
+        <div class="auth-loader"></div>
+        <p>Checking authentication...</p>
+      </div>
+    `;
+  } else if (state === "signin") {
+    content = `
+      <div class="auth-card">
+        <div class="auth-brand">BudgetApp</div>
+        <p class="auth-desc">Sign in to manage your finances</p>
+        <button class="auth-google-btn" id="googleSignInBtn">Sign in with Google</button>
+      </div>
+    `;
+  } else if (state === "denied") {
+    const supportEmail = BUDGETAPP_SETTINGS.sellerSupportEmail;
+    content = `
+      <div class="auth-card">
+        <div class="auth-brand">BudgetApp</div>
+        <p class="auth-error">Your account (${email || "unknown"}) is not authorized.</p>
+        ${supportEmail ? `<p class="auth-desc">Contact <a href="mailto:${supportEmail}">${supportEmail}</a></p>` : ""}
+      </div>
+    `;
+  } else if (state === "error") {
+    content = `
+      <div class="auth-card">
+        <div class="auth-brand">BudgetApp</div>
+        <p class="auth-error">${errorMessage || "Authentication error"}</p>
+        <button class="auth-google-btn" onclick="location.reload()">Try Again</button>
+      </div>
+    `;
+  }
+
+  overlay.innerHTML = `<div class="auth-backdrop">${content}</div>`;
+  overlay.style.display = "";
+
+  if (state === "signin" && onSignIn) {
+    document.getElementById("googleSignInBtn").addEventListener("click", onSignIn);
+  }
+}
+
+function hideAuthOverlay() {
+  const overlay = document.getElementById("authOverlay");
+  if (overlay) overlay.style.display = "none";
+}
+
+export function getCategories(type = null) {
   const data = loadData();
   const categories = new Set(data.budgets.map(item => item.subCategory));
   data.transactions
@@ -49,12 +151,12 @@ function getCategories(type = null) {
   return Array.from(categories).sort();
 }
 
-function getMainCategories(type = null) {
+export function getMainCategories(type = null) {
   if (type === "Income") return ["Income"];
   return ["Bills", "Monthly Expenses"];
 }
 
-function getSubCategories(mainCategory) {
+export function getSubCategories(mainCategory) {
   const data = loadData();
   if (mainCategory === "Income") return [...data.incomeSubCategories].sort();
   return data.budgets
@@ -63,11 +165,12 @@ function getSubCategories(mainCategory) {
     .sort();
 }
 
-function getAccounts() {
+export function getAccounts() {
   return loadData().accounts.map(item => item.name).sort();
 }
 
-function shellMarkup(activePage) {
+function shellMarkup(activePage, authResult) {
+  const showSignOut = authResult?.mode === "firebase";
   return `
     <aside class="sidebar">
       <div class="sidebar-brand">
@@ -82,15 +185,25 @@ function shellMarkup(activePage) {
         <a href="add-transaction.html" data-page="transaction">Add Transaction</a>
         <a href="budget.html" data-page="budget">Categories Setup</a>
       </nav>
+      ${showSignOut ? '<button class="signout-btn" onclick="signOut()">Sign Out</button>' : ""}
       <p id="status" class="sidebar-status"></p>
     </aside>
   `;
 }
 
-function mountShell(activePage) {
-  document.body.insertAdjacentHTML("afterbegin", shellMarkup(activePage));
-  initShell(activePage);
+export async function mountShell(activePage) {
+  const authResult = await initAuthGate();
+  if (!authResult.allowed) return;
+  document.body.insertAdjacentHTML("afterbegin", shellMarkup(activePage, authResult));
+  initShell(activePage, authResult);
   requestAnimationFrame(setupMobilePager);
+}
+
+function signOut() {
+  const auth = getAuth();
+  fbSignOut(auth).then(() => {
+    window.location.reload();
+  });
 }
 
 function setupMobilePager() {
@@ -207,3 +320,13 @@ function getNodeLabel(node) {
     "Section"
   ).trim();
 }
+
+// Bridge to window for inline onclick handlers
+window.formatMoney = formatMoney;
+window.parseAmount = parseAmount;
+window.setStatus = setStatus;
+window.getCategories = getCategories;
+window.getMainCategories = getMainCategories;
+window.getSubCategories = getSubCategories;
+window.getAccounts = getAccounts;
+window.signOut = signOut;

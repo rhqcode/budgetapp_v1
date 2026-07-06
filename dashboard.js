@@ -1,3 +1,6 @@
+import { mountShell, formatMoney, getAccounts, getSubCategories, getMainCategories } from './app.js';
+import { loadData } from './store.js';
+
 let monthlyChart = null;
 let categoryChart = null;
 let historicalChart = null;
@@ -5,9 +8,9 @@ let budgetChart = null;
 let selectedMainCategories = [];
 let selectedSubCategories = [];
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   if (window.ChartDataLabels) Chart.register(ChartDataLabels);
-  mountShell("dashboard");
+  await mountShell("dashboard");
   populateDashboardFilters();
   ["fromDate", "toDate", "accountFilter"].forEach(id => {
     document.getElementById(id).addEventListener("change", renderDashboard);
@@ -423,3 +426,9 @@ function renderRecentTransactions(rows) {
     `).join("")}
   `;
 }
+
+// Bridge to window for inline onclick handlers
+window.toggleFilterMenu = toggleFilterMenu;
+window.toggleMainCategory = toggleMainCategory;
+window.toggleSubCategory = toggleSubCategory;
+window.clearDashboardFilters = clearDashboardFilters;

@@ -1,4 +1,4 @@
-const STORE_KEY = "budgetapp_v1_data";
+export const STORE_KEY = "budgetapp_v1_data";
 const DEMO_DATA_VERSION = 2;
 
 const demoBillCategories = [
@@ -147,7 +147,7 @@ function buildDemoTransactions() {
   return rows.sort((a, b) => b.date.localeCompare(a.date));
 }
 
-function loadData() {
+export function loadData() {
   const saved = localStorage.getItem(STORE_KEY);
   if (!saved) {
     saveData(defaultData);
@@ -191,11 +191,11 @@ function normalizeData(data) {
   return data;
 }
 
-function saveData(data) {
+export function saveData(data) {
   localStorage.setItem(STORE_KEY, JSON.stringify(data));
 }
 
-function upsertTransaction(transaction) {
+export function upsertTransaction(transaction) {
   const data = loadData();
   data.transactions.unshift({
     id: crypto.randomUUID(),
@@ -205,7 +205,7 @@ function upsertTransaction(transaction) {
   saveData(data);
 }
 
-function upsertAccount(account) {
+export function upsertAccount(account) {
   const data = loadData();
   const existing = data.accounts.find(item => item.id === account.id);
   if (existing) Object.assign(existing, account);
@@ -213,13 +213,13 @@ function upsertAccount(account) {
   saveData(data);
 }
 
-function deleteAccount(id) {
+export function deleteAccount(id) {
   const data = loadData();
   data.accounts = data.accounts.filter(item => item.id !== id);
   saveData(data);
 }
 
-function upsertBudget(budget) {
+export function upsertBudget(budget) {
   const data = loadData();
   const existing = data.budgets.find(item => item.id === budget.id);
   if (existing) Object.assign(existing, budget);
@@ -227,13 +227,13 @@ function upsertBudget(budget) {
   saveData(data);
 }
 
-function deleteBudget(id) {
+export function deleteBudget(id) {
   const data = loadData();
   data.budgets = data.budgets.filter(item => item.id !== id);
   saveData(data);
 }
 
-function addIncomeSubCategory(name) {
+export function addIncomeSubCategory(name) {
   const data = loadData();
   if (!data.incomeSubCategories.some(item => item.toLowerCase() === name.toLowerCase())) {
     data.incomeSubCategories.push(name);
@@ -242,8 +242,19 @@ function addIncomeSubCategory(name) {
   saveData(data);
 }
 
-function deleteIncomeSubCategory(name) {
+export function deleteIncomeSubCategory(name) {
   const data = loadData();
   data.incomeSubCategories = data.incomeSubCategories.filter(item => item !== name);
   saveData(data);
 }
+
+// Bridge to window for inline onclick handlers
+window.loadData = loadData;
+window.saveData = saveData;
+window.upsertTransaction = upsertTransaction;
+window.upsertAccount = upsertAccount;
+window.deleteAccount = deleteAccount;
+window.upsertBudget = upsertBudget;
+window.deleteBudget = deleteBudget;
+window.addIncomeSubCategory = addIncomeSubCategory;
+window.deleteIncomeSubCategory = deleteIncomeSubCategory;

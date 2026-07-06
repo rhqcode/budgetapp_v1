@@ -1,5 +1,8 @@
-document.addEventListener("DOMContentLoaded", () => {
-  mountShell("accounts");
+import { mountShell, setStatus } from './app.js';
+import { loadData, upsertAccount, deleteAccount } from './store.js';
+
+document.addEventListener("DOMContentLoaded", async () => {
+  await mountShell("accounts");
   document.getElementById("accountForm").addEventListener("submit", saveAccountForm);
   renderAccountsPage();
 });
@@ -33,3 +36,6 @@ function removeAccount(id) {
   deleteAccount(id);
   renderAccountsPage();
 }
+
+// Bridge to window for inline onclick handlers
+window.removeAccount = removeAccount;

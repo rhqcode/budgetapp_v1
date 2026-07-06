@@ -1,5 +1,8 @@
-document.addEventListener("DOMContentLoaded", () => {
-  mountShell("transaction");
+import { mountShell, parseAmount, setStatus, getAccounts, getMainCategories, getSubCategories } from './app.js';
+import { upsertTransaction } from './store.js';
+
+document.addEventListener("DOMContentLoaded", async () => {
+  await mountShell("transaction");
   document.getElementById("txDate").value = new Date().toISOString().slice(0, 10);
   renderTransactionOptions();
   document.getElementById("txType").addEventListener("change", renderCategoryOptions);

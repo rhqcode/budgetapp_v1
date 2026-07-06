@@ -1,5 +1,8 @@
-document.addEventListener("DOMContentLoaded", () => {
-  mountShell("budget");
+import { mountShell, formatMoney, parseAmount, setStatus } from './app.js';
+import { loadData, upsertBudget, addIncomeSubCategory, upsertAccount, deleteBudget, deleteIncomeSubCategory, deleteAccount } from './store.js';
+
+document.addEventListener("DOMContentLoaded", async () => {
+  await mountShell("budget");
   document.getElementById("billsForm").addEventListener("submit", event => saveBudgetForm(event, "Bills"));
   document.getElementById("monthlyForm").addEventListener("submit", event => saveBudgetForm(event, "Monthly Expenses"));
   document.getElementById("incomeSubForm").addEventListener("submit", saveIncomeSubForm);
@@ -100,3 +103,8 @@ function removeAccount(id) {
   deleteAccount(id);
   renderBudgetPage();
 }
+
+// Bridge to window for inline onclick handlers
+window.removeBudget = removeBudget;
+window.removeIncomeSub = removeIncomeSub;
+window.removeAccount = removeAccount;
