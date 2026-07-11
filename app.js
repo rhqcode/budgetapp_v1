@@ -45,7 +45,7 @@ async function initAuthGate() {
     hideAuthOverlay();
     return { allowed: true, mode: "api", user };
   } catch (error) {
-    if (error.status === 401) {
+    if (!error.status || error.status === 401) {
       showAuthOverlay("signin", null, null, () => window.location.assign(getSignInUrl()));
       return new Promise(() => {});
     }
@@ -74,8 +74,8 @@ function showAuthOverlay(state, email, errorMessage, onSignIn) {
     content = `
       <div class="auth-card">
         <div class="auth-brand">BudgetApp</div>
-        <p class="auth-desc">Sign in to manage your finances</p>
-        <button class="auth-google-btn" id="googleSignInBtn">Sign in with Google</button>
+        <p class="auth-desc">Sign in securely to manage your finances</p>
+        <button class="auth-google-btn" id="googleSignInBtn"><span class="google-mark">G</span> Continue with Google</button>
       </div>
     `;
   } else if (state === "denied") {
@@ -175,6 +175,7 @@ export async function mountShell(activePage) {
     }
   }
   document.body.insertAdjacentHTML("afterbegin", shellMarkup(activePage, authResult));
+  document.body.classList.add("shell-mounted");
   initShell(activePage, authResult);
   requestAnimationFrame(setupMobilePager);
 }

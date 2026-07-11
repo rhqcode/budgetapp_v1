@@ -1133,6 +1133,22 @@ tbody tr:hover td { background: #fcf7f1; }
 .auth-google-btn { border-radius: 999px; border-color: var(--terracotta); background: var(--terracotta); color: #fff; }
 .auth-google-btn:hover { background: var(--terracotta-dark); }
 .auth-loader { border-top-color: var(--terracotta); }
+.google-mark {
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: #fff;
+  color: #4285f4;
+  font-family: Arial, sans-serif;
+  font-weight: 800;
+}
+body:not(.shell-mounted) .main {
+  width: min(100%, 1600px);
+  margin-right: auto;
+  margin-left: auto;
+}
 
 @media (max-width: 860px) {
   .sidebar { height: 104px; padding: 12px 15px; }

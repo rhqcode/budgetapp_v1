@@ -1,4 +1,4 @@
-const apiUrl = import.meta.env.VITE_API_URL;
+const apiUrl = import.meta.env?.VITE_API_URL || "https://budgetapp-v1-api.onrender.com";
 
 async function request(path, options = {}) {
   const response = await fetch(`${apiUrl}${path}`, {
