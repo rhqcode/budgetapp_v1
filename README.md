@@ -1,43 +1,34 @@
-# BudgetApp v1
+# BudgetApp frontend
 
-Simple sellable template version of the finance dashboard.
+Public Vite frontend for BudgetApp. It is designed for GitHub Pages and talks only to the private Express API. Firebase authentication and data APIs are never called by frontend JavaScript.
 
-## Included
+## Local development
 
-- Combined dashboard for income and expenses
-- Historical income vs expenses chart
-- Budget balance charts on the dashboard
-- Filters by date, multiple main categories, multiple subcategories, and account
-- Add transaction form
-- Categories setup for Bills, Monthly Expenses, Income subcategories, and accounts
-- Firebase-ready config and auth gate
-- LocalStorage demo datastore so the app works before Firebase is connected
+Requirements: Node.js 20 or newer.
 
-## Firebase Plan
+1. Copy `.env.example` to `.env.local` and fill in the local API URL.
+2. Run the backend on port 3000.
+3. Run `npm install` and `npm run dev`.
 
-This template is prepared for Firebase Authentication and Firestore. Buyers can connect their own Firebase project in `firebase-config.js`.
+## GitHub Pages
 
-For seller-controlled access, use a Firestore whitelist:
+The workflow in `.github/workflows/deploy-pages.yml` builds and deploys `main`.
 
-```text
-allowedUsers/{email}
-  active: true
-  purchasedAt: timestamp
-  plan: "template"
-```
+In GitHub:
 
-After login, check whether the user's email exists and is active before showing the app. This prevents shared links from giving access to non-buyers.
+1. Keep this repository public and set **Settings > Pages > Source** to **GitHub Actions**.
+2. Add `VITE_API_URL` as a repository **Variable** under **Settings > Secrets and variables > Actions**. Set it to the Render service URL, with no trailing slash.
 
-## Files
+The workflow currently uses `/budgetapp_v1/` as the Pages base path. Change `VITE_BASE_PATH` in the workflow if the repository name changes.
 
-- `index.html` - dashboard
-- `add-transaction.html` - transaction entry
-- `budget.html` - categories and accounts setup
-- `accounts.html` - legacy direct accounts setup page
-- `app.js` - shared helpers, navigation, auth placeholder
-- `store.js` - local datastore, later replace/sync with Firestore
-- `dashboard.js` - dashboard charts and filters
-- `transactions.js` - add transaction page
-- `budget.js` - budget page
-- `accounts.js` - accounts/setup page
-- `styles.css` - shared styling and chart/layout formatting
+## Architecture
+
+- The frontend redirects users to the backend `/auth/google` endpoint.
+- The backend completes Google OAuth and exchanges the Google identity with Firebase Authentication.
+- The backend creates a Firebase session cookie marked HTTP-only, so frontend JavaScript cannot read it.
+- API calls include that cookie and the backend verifies it with Firebase Admin.
+- Firestore data is stored at `users/{uid}/app/data` and is only accessed by the API.
+
+For reliable production cookies, use custom domains on the same parent domain (for example `app.example.com` and `api.example.com`). A GitHub Pages domain calling a Render domain requires `SameSite=None; Secure`, and browsers that block third-party cookies may still reject that cross-site session.
+
+The backend lives separately at `../budgetapp_v1_backend` and should be pushed to a private GitHub repository.

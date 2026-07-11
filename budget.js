@@ -10,10 +10,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderBudgetPage();
 });
 
-function saveBudgetForm(event, mainCategory) {
+async function saveBudgetForm(event, mainCategory) {
   event.preventDefault();
   const prefix = mainCategory === "Bills" ? "bills" : "monthly";
-  upsertBudget({
+  await upsertBudget({
     mainCategory,
     subCategory: document.getElementById(`${prefix}SubCategory`).value.trim(),
     amount: parseAmount(document.getElementById(`${prefix}Amount`).value)
@@ -23,18 +23,18 @@ function saveBudgetForm(event, mainCategory) {
   setStatus("Category saved");
 }
 
-function saveIncomeSubForm(event) {
+async function saveIncomeSubForm(event) {
   event.preventDefault();
   const name = document.getElementById("incomeSubCategory").value.trim();
-  if (name) addIncomeSubCategory(name);
+  if (name) await addIncomeSubCategory(name);
   event.target.reset();
   renderBudgetPage();
   setStatus("Income sub category saved");
 }
 
-function saveAccountForm(event) {
+async function saveAccountForm(event) {
   event.preventDefault();
-  upsertAccount({
+  await upsertAccount({
     name: document.getElementById("accountName").value.trim(),
     type: document.getElementById("accountType").value
   });
@@ -89,18 +89,18 @@ function renderAccountsTable(accounts) {
   `;
 }
 
-function removeBudget(id) {
-  deleteBudget(id);
+async function removeBudget(id) {
+  await deleteBudget(id);
   renderBudgetPage();
 }
 
-function removeIncomeSub(name) {
-  deleteIncomeSubCategory(name);
+async function removeIncomeSub(name) {
+  await deleteIncomeSubCategory(name);
   renderBudgetPage();
 }
 
-function removeAccount(id) {
-  deleteAccount(id);
+async function removeAccount(id) {
+  await deleteAccount(id);
   renderBudgetPage();
 }
 

@@ -5,26 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Add Transaction</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@500;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <main class="main">
     <header class="topbar">
       <div>
-        <h1 class="page-title">Add Transaction</h1>
-        <p class="page-subtitle">Record income or expenses by main and sub category</p>
+        <span class="eyebrow">A quick money moment</span>
+        <h1 class="page-title">Add a transaction</h1>
+        <p class="page-subtitle">Keep your plan beautifully up to date in just a few seconds.</p>
       </div>
     </header>
 
-    <section class="card user-note-card">
+    <section class="card user-note-card tip-card">
       <div class="card-header">
-        <h2 class="card-title">User Notes</h2>
+        <h2 class="card-title">A little tip</h2>
       </div>
       <p class="muted">Choose Income for money received and Expense for spending. The main category controls which subcategories appear, so keep Categories Setup updated before entering regular transactions.</p>
     </section>
 
-    <section class="card" style="margin-top:16px;">
+    <section class="card form-card" style="margin-top:16px;">
+      <div class="form-intro"><span>01</span><div><h2>Transaction details</h2><p>Every entry helps create a clearer picture.</p></div></div>
       <form id="transactionForm" class="form-grid">
         <div class="form-field">
           <label>Date</label>

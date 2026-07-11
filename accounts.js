@@ -7,9 +7,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderAccountsPage();
 });
 
-function saveAccountForm(event) {
+async function saveAccountForm(event) {
   event.preventDefault();
-  upsertAccount({
+  await upsertAccount({
     name: document.getElementById("accountName").value.trim(),
     type: document.getElementById("accountType").value
   });
@@ -32,8 +32,8 @@ function renderAccountsPage() {
   `;
 }
 
-function removeAccount(id) {
-  deleteAccount(id);
+async function removeAccount(id) {
+  await deleteAccount(id);
   renderAccountsPage();
 }
 

@@ -35,9 +35,9 @@ function renderSubCategoryOptions() {
     .join("");
 }
 
-function saveTransactionForm(event) {
+async function saveTransactionForm(event) {
   event.preventDefault();
-  upsertTransaction({
+  await upsertTransaction({
     date: document.getElementById("txDate").value,
     type: document.getElementById("txType").value,
     mainCategory: document.getElementById("txMainCategory").value,

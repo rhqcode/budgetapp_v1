@@ -183,7 +183,7 @@ function renderMonthlyChart(rows) {
       datasets: [{
         label: "Net Cashflow",
         data,
-        backgroundColor: data.map(value => value >= 0 ? "#16845b" : "#d14343"),
+        backgroundColor: data.map(value => value >= 0 ? "#6e9478" : "#ce7b62"),
         borderRadius: 6
       }]
     },
@@ -209,16 +209,16 @@ function renderHistoricalChart(rows) {
         {
           label: "Income",
           data: monthKeys.map(label => monthly[label].Income),
-          borderColor: "#16845b",
-          backgroundColor: "rgba(22, 132, 91, 0.12)",
+          borderColor: "#6e9478",
+          backgroundColor: "rgba(110, 148, 120, 0.14)",
           tension: 0.3,
           fill: true
         },
         {
           label: "Expenses",
           data: monthKeys.map(label => monthly[label].Expense),
-          borderColor: "#d14343",
-          backgroundColor: "rgba(209, 67, 67, 0.12)",
+          borderColor: "#ce7b62",
+          backgroundColor: "rgba(206, 123, 98, 0.14)",
           tension: 0.3,
           fill: true
         }
@@ -249,8 +249,8 @@ function renderBudgetDashboard() {
     data: {
       labels,
       datasets: [
-        { label: "Budget", data: budgetValues, backgroundColor: "#2563eb", borderRadius: 6 },
-        { label: "Spent", data: spentValues, backgroundColor: "#d14343", borderRadius: 6 }
+        { label: "Budget", data: budgetValues, backgroundColor: "#d1ad59", borderRadius: 8 },
+        { label: "Spent", data: spentValues, backgroundColor: "#b95735", borderRadius: 8 }
       ]
     },
     options: chartOptions()
@@ -287,7 +287,7 @@ function renderCategoryChart(rows) {
       labels,
       datasets: [{
         data,
-        backgroundColor: ["#2563eb", "#16845b", "#d14343", "#b7791f", "#7c3aed", "#0f766e"]
+        backgroundColor: ["#b95735", "#6e9478", "#d1ad59", "#ce7b62", "#8e7661", "#76929a"]
       }]
     },
     options: {

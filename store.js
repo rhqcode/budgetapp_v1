@@ -1,5 +1,8 @@
+import { fetchUserData, putUserData } from "./api.js";
+
 export const STORE_KEY = "budgetapp_v1_data";
 const DEMO_DATA_VERSION = 2;
+let remoteEnabled = false;
 
 const demoBillCategories = [
   ["Rent", 1500, "Rent payment", "Main Bank"],
@@ -162,6 +165,13 @@ export function loadData() {
   }
 }
 
+export async function syncRemoteData() {
+  const data = normalizeData(await fetchUserData());
+  remoteEnabled = true;
+  localStorage.setItem(STORE_KEY, JSON.stringify(data));
+  return data;
+}
+
 function normalizeData(data) {
   data.profile = data.profile || { displayName: "Demo User", currency: "SGD" };
   data.accounts = data.accounts || [];
@@ -191,61 +201,62 @@ function normalizeData(data) {
   return data;
 }
 
-export function saveData(data) {
+export async function saveData(data) {
   localStorage.setItem(STORE_KEY, JSON.stringify(data));
+  if (remoteEnabled) await putUserData(data);
 }
 
-export function upsertTransaction(transaction) {
+export async function upsertTransaction(transaction) {
   const data = loadData();
   data.transactions.unshift({
     id: crypto.randomUUID(),
     ...transaction,
     amount: Number(transaction.amount) || 0
   });
-  saveData(data);
+  await saveData(data);
 }
 
-export function upsertAccount(account) {
+export async function upsertAccount(account) {
   const data = loadData();
   const existing = data.accounts.find(item => item.id === account.id);
   if (existing) Object.assign(existing, account);
   else data.accounts.push({ id: crypto.randomUUID(), ...account });
-  saveData(data);
+  await saveData(data);
 }
 
-export function deleteAccount(id) {
+export async function deleteAccount(id) {
   const data = loadData();
   data.accounts = data.accounts.filter(item => item.id !== id);
-  saveData(data);
+  await saveData(data);
 }
 
-export function upsertBudget(budget) {
+export async function upsertBudget(budget) {
   const data = loadData();
   const existing = data.budgets.find(item => item.id === budget.id);
   if (existing) Object.assign(existing, budget);
   else data.budgets.push({ id: crypto.randomUUID(), ...budget });
-  saveData(data);
+  await saveData(data);
 }
 
-export function deleteBudget(id) {
+export async function deleteBudget(id) {
   const data = loadData();
   data.budgets = data.budgets.filter(item => item.id !== id);
-  saveData(data);
+  await saveData(data);
 }
 
-export function addIncomeSubCategory(name) {
+export async function addIncomeSubCategory(name) {
   const data = loadData();
   if (!data.incomeSubCategories.some(item => item.toLowerCase() === name.toLowerCase())) {
     data.incomeSubCategories.push(name);
     data.incomeSubCategories.sort();
   }
-  saveData(data);
+  await saveData(data);
 }
 
-export function deleteIncomeSubCategory(name) {
+export async function deleteIncomeSubCategory(name) {
   const data = loadData();
   data.incomeSubCategories = data.incomeSubCategories.filter(item => item !== name);
-  saveData(data);
+  await saveData(data);
 }
 
 // Bridge to window for inline onclick handlers

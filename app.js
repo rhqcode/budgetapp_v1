@@ -1,14 +1,7 @@
-import { initializeApp } from 'firebase/app';
-import {
-  getAuth,
-  GoogleAuthProvider,
-  signInWithPopup,
-  onAuthStateChanged,
-  signOut as fbSignOut
-} from 'firebase/auth';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
-import { loadData } from './store.js';
-import { BUDGETAPP_FIREBASE_CONFIG, BUDGETAPP_SETTINGS } from './firebase-config.js';
+import { loadData, syncRemoteData } from './store.js';
+import { getCurrentUser, getSignInUrl, logout } from './api.js';
+
+const SUPPORT_EMAIL = "support@example.com";
 
 export function formatMoney(value) {
   const { profile } = loadData();
@@ -36,7 +29,7 @@ function initShell(activePage, authResult) {
   const data = loadData();
   const profileName = document.getElementById("profileName");
 
-  if (authResult?.mode === "firebase") {
+  if (authResult?.mode === "api") {
     if (profileName) profileName.textContent = authResult.user.displayName || "User";
     setStatus(`Signed in as ${authResult.user.email}`);
   } else {
@@ -46,44 +39,19 @@ function initShell(activePage, authResult) {
 }
 
 async function initAuthGate() {
-  const settings = BUDGETAPP_SETTINGS;
-  if (!settings.enableFirebase) return { allowed: true, mode: "demo" };
-
-  return new Promise((resolve) => {
-    showAuthOverlay("loading");
-
-    const app = initializeApp(BUDGETAPP_FIREBASE_CONFIG);
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
-
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        if (settings.requireWhitelist) {
-          try {
-            const db = getFirestore(app);
-            const snap = await getDoc(doc(db, "allowedUsers", user.email));
-            if (!snap.exists() || snap.data().active !== true) {
-              showAuthOverlay("denied", user.email);
-              return;
-            }
-          } catch (err) {
-            showAuthOverlay("error", null, err.message);
-            return;
-          }
-        }
-        hideAuthOverlay();
-        resolve({ allowed: true, mode: "firebase", user });
-      } else {
-        showAuthOverlay("signin", null, null, () => {
-          signInWithPopup(auth, provider).catch(err => {
-            if (err.code !== "auth/popup-closed-by-user") {
-              showAuthOverlay("error", null, err.message);
-            }
-          });
-        });
-      }
-    });
-  });
+  showAuthOverlay("loading");
+  try {
+    const user = await getCurrentUser();
+    hideAuthOverlay();
+    return { allowed: true, mode: "api", user };
+  } catch (error) {
+    if (error.status === 401) {
+      showAuthOverlay("signin", null, null, () => window.location.assign(getSignInUrl()));
+      return new Promise(() => {});
+    }
+    showAuthOverlay(error.status === 403 ? "denied" : "error", null, error.message);
+    return new Promise(() => {});
+  }
 }
 
 function showAuthOverlay(state, email, errorMessage, onSignIn) {
@@ -111,7 +79,7 @@ function showAuthOverlay(state, email, errorMessage, onSignIn) {
       </div>
     `;
   } else if (state === "denied") {
-    const supportEmail = BUDGETAPP_SETTINGS.sellerSupportEmail;
+    const supportEmail = SUPPORT_EMAIL;
     content = `
       <div class="auth-card">
         <div class="auth-brand">BudgetApp</div>
@@ -170,21 +138,25 @@ export function getAccounts() {
 }
 
 function shellMarkup(activePage, authResult) {
-  const showSignOut = authResult?.mode === "firebase";
+  const showSignOut = authResult?.mode === "api";
   return `
     <aside class="sidebar">
       <div class="sidebar-brand">
         <span class="brand-mark">B</span>
         <div>
-          <strong>BudgetApp</strong>
-          <span id="profileName">Template</span>
+          <strong>Budget & Bloom</strong>
+          <span id="profileName">Your money, made lovely</span>
         </div>
       </div>
       <nav class="sidebar-nav">
-        <a href="index.html" data-page="dashboard">Dashboard</a>
-        <a href="add-transaction.html" data-page="transaction">Add Transaction</a>
-        <a href="budget.html" data-page="budget">Categories Setup</a>
+        <a href="index.html" data-page="dashboard"><span class="nav-icon">⌂</span>Overview</a>
+        <a href="add-transaction.html" data-page="transaction"><span class="nav-icon">＋</span>Add transaction</a>
+        <a href="budget.html" data-page="budget"><span class="nav-icon">✦</span>Plan & categories</a>
       </nav>
+      <div class="sidebar-promo">
+        <span>Thoughtful finances</span>
+        <strong>Small steps make beautiful progress.</strong>
+      </div>
       ${showSignOut ? '<button class="signout-btn" onclick="signOut()">Sign Out</button>' : ""}
       <p id="status" class="sidebar-status"></p>
     </aside>
@@ -194,16 +166,22 @@ function shellMarkup(activePage, authResult) {
 export async function mountShell(activePage) {
   const authResult = await initAuthGate();
   if (!authResult.allowed) return;
+  if (authResult.mode === "api") {
+    try {
+      await syncRemoteData();
+    } catch (error) {
+      showAuthOverlay(error.message.includes("authorized") ? "denied" : "error", authResult.user.email, error.message);
+      throw error;
+    }
+  }
   document.body.insertAdjacentHTML("afterbegin", shellMarkup(activePage, authResult));
   initShell(activePage, authResult);
   requestAnimationFrame(setupMobilePager);
 }
 
-function signOut() {
-  const auth = getAuth();
-  fbSignOut(auth).then(() => {
-    window.location.reload();
-  });
+async function signOut() {
+  await logout();
+  window.location.reload();
 }
 
 function setupMobilePager() {
