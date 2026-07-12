@@ -1,5 +1,5 @@
 import { loadData, syncRemoteData } from './store.js';
-import { getCurrentUser, getSignInUrl, logout } from './api.js';
+import { completeSignIn, getCurrentUser, getSignInUrl, logout } from './api.js';
 
 const SUPPORT_EMAIL = "support@example.com";
 
@@ -41,6 +41,7 @@ function initShell(activePage, authResult) {
 async function initAuthGate() {
   showAuthOverlay("loading");
   try {
+    await completeSignIn();
     const user = await getCurrentUser();
     hideAuthOverlay();
     return { allowed: true, mode: "api", user };
