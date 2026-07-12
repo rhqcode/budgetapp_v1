@@ -1,14 +1,22 @@
 const apiUrl = import.meta.env?.VITE_API_URL || "https://budgetapp-v1-backend.onrender.com";
 
 async function request(path, options = {}) {
-  const response = await fetch(`${apiUrl}${path}`, {
-    ...options,
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers
-    }
-  });
+  let response;
+  try {
+    response = await fetch(`${apiUrl}${path}`, {
+      ...options,
+      credentials: "include",
+      signal: options.signal || AbortSignal.timeout(15000),
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers
+      }
+    });
+  } catch (cause) {
+    const error = new Error("The secure sign-in service is waking up. Please try again in a moment.");
+    error.cause = cause;
+    throw error;
+  }
 
   if (response.status === 204) return null;
   const body = await response.json().catch(() => ({}));
