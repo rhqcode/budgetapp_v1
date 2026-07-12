@@ -1,5 +1,7 @@
-import { mountShell, parseAmount, setStatus, getAccounts, getMainCategories, getSubCategories } from './app.js';
-import { upsertTransaction } from './store.js';
+import { mountShell, formatMoney, parseAmount, setStatus, getAccounts, getMainCategories, getSubCategories } from './app.js';
+import { loadData, upsertTransaction } from './store.js';
+
+let editingTransactionId = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
   await mountShell("transaction");
@@ -8,6 +10,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("txType").addEventListener("change", renderCategoryOptions);
   document.getElementById("txMainCategory").addEventListener("change", renderSubCategoryOptions);
   document.getElementById("transactionForm").addEventListener("submit", saveTransactionForm);
+  document.getElementById("cancelEditBtn").addEventListener("click", resetTransactionForm);
+  document.getElementById("transactionsTable").addEventListener("click", event => {
+    const button = event.target.closest("[data-edit-transaction]");
+    if (button) editTransaction(button.dataset.editTransaction);
+  });
+  renderTransactionsTable();
 });
 
 function renderTransactionOptions() {
@@ -38,6 +46,7 @@ function renderSubCategoryOptions() {
 async function saveTransactionForm(event) {
   event.preventDefault();
   await upsertTransaction({
+    ...(editingTransactionId ? { id: editingTransactionId } : {}),
     date: document.getElementById("txDate").value,
     type: document.getElementById("txType").value,
     mainCategory: document.getElementById("txMainCategory").value,
@@ -47,8 +56,78 @@ async function saveTransactionForm(event) {
     description: document.getElementById("txDescription").value.trim()
   });
 
+  const wasEditing = Boolean(editingTransactionId);
+  resetTransactionForm();
+  renderTransactionsTable();
+  setStatus(wasEditing ? "Transaction updated" : "Transaction saved");
+}
+
+function resetTransactionForm() {
+  editingTransactionId = null;
   document.getElementById("transactionForm").reset();
   document.getElementById("txDate").value = new Date().toISOString().slice(0, 10);
   renderTransactionOptions();
-  setStatus("Transaction saved");
+  document.getElementById("transactionFormTitle").textContent = "New transaction";
+  document.getElementById("saveTransactionBtn").textContent = "Save Transaction";
+  document.getElementById("cancelEditBtn").hidden = true;
+}
+
+function editTransaction(id) {
+  const transaction = loadData().transactions.find(item => item.id === id);
+  if (!transaction) return;
+
+  editingTransactionId = id;
+  document.getElementById("txDate").value = transaction.date;
+  document.getElementById("txType").value = transaction.type;
+  renderCategoryOptions();
+  document.getElementById("txMainCategory").value = transaction.mainCategory;
+  renderSubCategoryOptions();
+  document.getElementById("txSubCategory").value = transaction.subCategory;
+  document.getElementById("txAccount").value = transaction.account;
+  document.getElementById("txAmount").value = transaction.amount;
+  document.getElementById("txDescription").value = transaction.description || "";
+  document.getElementById("transactionFormTitle").textContent = "Edit transaction";
+  document.getElementById("saveTransactionBtn").textContent = "Update Transaction";
+  document.getElementById("cancelEditBtn").hidden = false;
+  document.getElementById("transactionForm").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function renderTransactionsTable() {
+  const transactions = [...loadData().transactions].sort((a, b) =>
+    b.date.localeCompare(a.date)
+  );
+  document.getElementById("transactionCount").textContent =
+    `${transactions.length} transaction${transactions.length === 1 ? "" : "s"}`;
+
+  const table = document.getElementById("transactionsTable");
+  if (!transactions.length) {
+    table.innerHTML = `<tr><td class="muted">No transactions yet.</td></tr>`;
+    return;
+  }
+
+  table.innerHTML = `
+    <tr><th>Date</th><th>Type</th><th>Main</th><th>Sub</th><th>Description</th><th>Account</th><th>Amount</th><th>Action</th></tr>
+    ${transactions.map(item => `
+      <tr>
+        <td>${escapeHtml(item.date)}</td>
+        <td>${escapeHtml(item.type)}</td>
+        <td>${escapeHtml(item.mainCategory)}</td>
+        <td>${escapeHtml(item.subCategory)}</td>
+        <td>${escapeHtml(item.description || "")}</td>
+        <td>${escapeHtml(item.account)}</td>
+        <td class="${item.type === "Income" ? "positive" : "negative"}">${escapeHtml(formatMoney(item.amount))}</td>
+        <td><button class="ghost-btn table-action-btn" type="button" data-edit-transaction="${escapeHtml(item.id)}">Edit</button></td>
+      </tr>
+    `).join("")}
+  `;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>'"]/g, character => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "'": "&#39;",
+    '"': "&quot;"
+  })[character]);
 }

@@ -13,8 +13,8 @@
     <header class="topbar">
       <div>
         <span class="eyebrow">A quick money moment</span>
-        <h1 class="page-title">Add a transaction</h1>
-        <p class="page-subtitle">Keep your plan beautifully up to date in just a few seconds.</p>
+        <h1 class="page-title">Manage transactions</h1>
+        <p class="page-subtitle">Add new entries or update the transactions already in your account.</p>
       </div>
     </header>
 
@@ -26,7 +26,7 @@
     </section>
 
     <section class="card form-card" style="margin-top:16px;">
-      <div class="form-intro"><span>01</span><div><h2>Transaction details</h2><p>Every entry helps create a clearer picture.</p></div></div>
+      <div class="form-intro"><span>01</span><div><h2 id="transactionFormTitle">New transaction</h2><p>Every entry helps create a clearer picture.</p></div></div>
       <form id="transactionForm" class="form-grid">
         <div class="form-field">
           <label>Date</label>
@@ -60,9 +60,20 @@
           <input id="txDescription">
         </div>
         <div class="form-field full">
-          <button class="primary-btn" type="submit">Save Transaction</button>
+          <button class="primary-btn" id="saveTransactionBtn" type="submit">Save Transaction</button>
+          <button class="ghost-btn" id="cancelEditBtn" type="button" hidden>Cancel Edit</button>
         </div>
       </form>
+    </section>
+
+    <section class="card" style="margin-top:16px;">
+      <div class="card-header">
+        <h2 class="card-title">All transactions</h2>
+        <span class="muted" id="transactionCount"></span>
+      </div>
+      <div class="transaction-table-wrap">
+        <table id="transactionsTable"></table>
+      </div>
     </section>
   </main>
 

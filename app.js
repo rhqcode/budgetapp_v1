@@ -143,16 +143,22 @@ function shellMarkup(activePage, authResult) {
   return `
     <aside class="sidebar">
       <div class="sidebar-brand">
-        <span class="brand-mark">B</span>
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 40 40" role="img">
+            <path d="M8 29V18h6v11H8Zm9 0V11h6v18h-6Zm9 0V6h6v23h-6Z"></path>
+            <path class="brand-mark-line" d="M7 33h26"></path>
+          </svg>
+        </span>
         <div>
-          <strong>Budget & Bloom</strong>
-          <span id="profileName">Your money, made lovely</span>
+          <strong>Budget Studio</strong>
+          <span id="profileName">Your financial workspace</span>
         </div>
       </div>
       <nav class="sidebar-nav">
         <a href="index.html" data-page="dashboard"><span class="nav-icon">⌂</span>Overview</a>
         <a href="add-transaction.html" data-page="transaction"><span class="nav-icon">＋</span>Add transaction</a>
-        <a href="budget.html" data-page="budget"><span class="nav-icon">✦</span>Plan & categories</a>
+        <a href="budget.html" data-page="budget"><span class="nav-icon">⚙</span>Budget and Account Settings</a>
+        <a href="instructions.html" data-page="instructions"><span class="nav-icon">?</span>Instructions</a>
       </nav>
       <div class="sidebar-promo">
         <span>Thoughtful finances</span>

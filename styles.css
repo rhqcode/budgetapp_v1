@@ -68,6 +68,19 @@ button {
   font-weight: 800;
 }
 
+.brand-mark svg {
+  width: 25px;
+  height: 25px;
+  fill: currentColor;
+}
+
+.brand-mark .brand-mark-line {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 2.5;
+}
+
 .sidebar-nav {
   display: grid;
   gap: 6px;
@@ -427,6 +440,112 @@ table {
   width: 100%;
   min-width: 620px;
   border-collapse: collapse;
+}
+
+.transaction-table-wrap {
+  overflow-x: auto;
+}
+
+.table-action-btn {
+  min-height: 32px;
+  padding: 6px 14px;
+}
+
+.instruction-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  background: linear-gradient(135deg, #fff7ef, #f3f4e8);
+}
+
+.instruction-hero h2,
+.instruction-card h2,
+.instruction-help h2 {
+  margin: 0 0 8px;
+}
+
+.instruction-hero p,
+.instruction-card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.instruction-start-btn {
+  flex: 0 0 auto;
+  padding: 12px 20px;
+  color: #fff;
+  text-decoration: none;
+}
+
+.instruction-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.instruction-card {
+  display: flex;
+  gap: 16px;
+}
+
+.instruction-number {
+  display: grid;
+  place-items: center;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--peach);
+  color: var(--terracotta-dark);
+  font-family: "DM Mono", monospace;
+  font-weight: 700;
+}
+
+.instruction-example {
+  margin-top: 10px !important;
+  color: #7d6d62 !important;
+  font-size: 12px;
+}
+
+.instruction-help {
+  margin-top: 16px;
+}
+
+.instruction-help dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.instruction-help dl div {
+  padding: 14px;
+  border-radius: 12px;
+  background: #faf6f0;
+}
+
+.instruction-help dt {
+  font-weight: 700;
+}
+
+.instruction-help dd {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+@media (max-width: 860px) {
+  .instruction-grid,
+  .instruction-help dl {
+    grid-template-columns: 1fr;
+  }
+
+  .instruction-hero {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }
 
 .compact-table {
@@ -906,14 +1025,13 @@ body {
 .brand-mark {
   width: 42px;
   height: 42px;
-  border-radius: 50% 50% 42% 58%;
-  background: var(--butter);
-  color: var(--terracotta-dark);
-  font-family: "Fraunces", serif;
-  font-size: 20px;
-  transform: rotate(-5deg);
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-radius: 12px;
+  background: var(--terracotta);
+  color: #fffaf3;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, .18);
+  transform: none;
 }
-.brand-mark::first-letter { transform: rotate(5deg); }
 
 .sidebar-nav { gap: 8px; }
 .sidebar-nav a {

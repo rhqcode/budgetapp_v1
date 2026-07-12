@@ -9,6 +9,7 @@ export default defineConfig({
         'add-transaction': 'add-transaction.html',
         budget: 'budget.html',
         accounts: 'accounts.html',
+        instructions: 'instructions.html',
       }
     }
   }
