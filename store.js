@@ -8,8 +8,16 @@ const defaultData = {
     displayName: "BudgetApp User",
     currency: "SGD"
   },
-  accounts: [],
-  budgets: [],
+  accounts: [
+    { id: crypto.randomUUID(), name: "Main Bank", type: "Bank" },
+    { id: crypto.randomUUID(), name: "Credit Card", type: "Credit Card" }
+  ],
+  budgets: [
+    ...["Rent", "Utilities", "Phone", "Insurance", "Internet", "Subscriptions", "Gym", "Childcare", "Loan", "Taxes", "Medical Plan", "Storage"]
+      .map(subCategory => ({ id: crypto.randomUUID(), mainCategory: "Bills", subCategory, amount: 0 })),
+    ...["Food", "Transport", "Shopping", "Entertainment", "Dining Out", "Coffee", "Groceries", "Personal Care", "Healthcare", "Education", "Travel", "Gifts", "Pets", "Home Supplies", "Hobbies"]
+      .map(subCategory => ({ id: crypto.randomUUID(), mainCategory: "Monthly Expenses", subCategory, amount: 0 }))
+  ],
   incomeSubCategories: ["Salary", "Bonus", "Dividend", "Interest", "Side Income"],
   transactions: []
 };
@@ -32,6 +40,7 @@ export function loadData() {
 export async function syncRemoteData() {
   const remoteData = await fetchUserData();
   const hadLegacyDemoData = hasLegacyDemoData(remoteData);
+  const needsSeeding = !remoteData.accounts?.length || !remoteData.budgets?.length;
 
   if (hadLegacyDemoData) {
     remoteData.accounts = [];
@@ -46,7 +55,7 @@ export async function syncRemoteData() {
   const data = normalizeData(remoteData);
   remoteEnabled = true;
   localStorage.setItem(STORE_KEY, JSON.stringify(data));
-  if (hadLegacyDemoData) await putUserData(data);
+  if (hadLegacyDemoData || needsSeeding) await putUserData(data);
   return data;
 }
 
@@ -88,6 +97,22 @@ function normalizeData(data) {
     amount: Number(item.amount) || 0,
     account: item.account || ""
   }));
+
+  if (!data.accounts.length) {
+    data.accounts = [
+      { id: crypto.randomUUID(), name: "Main Bank", type: "Bank" },
+      { id: crypto.randomUUID(), name: "Credit Card", type: "Credit Card" }
+    ];
+  }
+  if (!data.budgets.length) {
+    data.budgets = [
+      ...["Rent", "Utilities", "Phone", "Insurance", "Internet", "Subscriptions", "Gym", "Childcare", "Loan", "Taxes", "Medical Plan", "Storage"]
+        .map(subCategory => ({ id: crypto.randomUUID(), mainCategory: "Bills", subCategory, amount: 0 })),
+      ...["Food", "Transport", "Shopping", "Entertainment", "Dining Out", "Coffee", "Groceries", "Personal Care", "Healthcare", "Education", "Travel", "Gifts", "Pets", "Home Supplies", "Hobbies"]
+        .map(subCategory => ({ id: crypto.randomUUID(), mainCategory: "Monthly Expenses", subCategory, amount: 0 }))
+    ];
+  }
+
   return data;
 }
 
