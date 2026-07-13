@@ -1,5 +1,5 @@
 import { mountShell, formatMoney, parseAmount, setStatus, getAccounts, getMainCategories, getSubCategories } from './app.js';
-import { loadData, upsertTransaction } from './store.js';
+import { loadData, upsertTransaction, deleteTransaction } from './store.js';
 
 let editingTransactionId = null;
 
@@ -12,8 +12,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("transactionForm").addEventListener("submit", saveTransactionForm);
   document.getElementById("cancelEditBtn").addEventListener("click", resetTransactionForm);
   document.getElementById("transactionsTable").addEventListener("click", event => {
-    const button = event.target.closest("[data-edit-transaction]");
-    if (button) editTransaction(button.dataset.editTransaction);
+    const editButton = event.target.closest("[data-edit-transaction]");
+    if (editButton) editTransaction(editButton.dataset.editTransaction);
+    const deleteButton = event.target.closest("[data-delete-transaction]");
+    if (deleteButton) removeTransaction(deleteButton.dataset.deleteTransaction);
   });
   renderTransactionsTable();
 });
@@ -89,7 +91,21 @@ function editTransaction(id) {
   document.getElementById("transactionFormTitle").textContent = "Edit transaction";
   document.getElementById("saveTransactionBtn").textContent = "Update Transaction";
   document.getElementById("cancelEditBtn").hidden = false;
-  document.getElementById("transactionForm").scrollIntoView({ behavior: "smooth", block: "start" });
+  const form = document.getElementById("transactionForm");
+  if (!window.showMobilePageContaining?.(form)) {
+    form.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
+async function removeTransaction(id) {
+  const transaction = loadData().transactions.find(item => item.id === id);
+  if (!transaction) return;
+  if (!window.confirm(`Delete ${transaction.description || transaction.subCategory} transaction?`)) return;
+
+  await deleteTransaction(id);
+  if (editingTransactionId === id) resetTransactionForm();
+  renderTransactionsTable();
+  setStatus("Transaction deleted");
 }
 
 function renderTransactionsTable() {
@@ -116,7 +132,10 @@ function renderTransactionsTable() {
         <td>${escapeHtml(item.description || "")}</td>
         <td>${escapeHtml(item.account)}</td>
         <td class="${item.type === "Income" ? "positive" : "negative"}">${escapeHtml(formatMoney(item.amount))}</td>
-        <td><button class="ghost-btn table-action-btn" type="button" data-edit-transaction="${escapeHtml(item.id)}">Edit</button></td>
+        <td class="table-actions">
+          <button class="ghost-btn table-action-btn" type="button" data-edit-transaction="${escapeHtml(item.id)}">Edit</button>
+          <button class="danger-btn table-action-btn" type="button" data-delete-transaction="${escapeHtml(item.id)}">Delete</button>
+        </td>
       </tr>
     `).join("")}
   `;

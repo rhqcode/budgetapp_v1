@@ -198,7 +198,19 @@ function renderHistoricalChart(rows) {
     map[month][item.type] += Number(item.amount);
     return map;
   }, {});
-  const monthKeys = Object.keys(monthly).sort();
+  const currentMonth = getLocalMonthKey();
+  const from = document.getElementById("fromDate").value;
+  const to = document.getElementById("toDate").value;
+  if ((!from || from.slice(0, 7) <= currentMonth) && (!to || to.slice(0, 7) >= currentMonth)) {
+    monthly[currentMonth] ||= { Income: 0, Expense: 0 };
+  }
+  const populatedMonths = Object.keys(monthly).sort();
+  const monthKeys = populatedMonths.length
+    ? getMonthRange(populatedMonths[0], populatedMonths.at(-1))
+    : [];
+  monthKeys.forEach(month => {
+    monthly[month] ||= { Income: 0, Expense: 0 };
+  });
 
   if (historicalChart) historicalChart.destroy();
   historicalChart = new Chart(document.getElementById("historicalChart"), {
@@ -230,7 +242,7 @@ function renderHistoricalChart(rows) {
 
 function renderBudgetDashboard() {
   const data = loadData();
-  const month = new Date().toISOString().slice(0, 7);
+  const month = getLocalMonthKey();
   const spentByCategory = data.transactions
     .filter(item => item.type === "Expense" && item.date.slice(0, 7) === month)
     .reduce((map, item) => {
@@ -262,11 +274,11 @@ function renderBudgetDashboard() {
       const spent = spentByCategory[`${item.mainCategory}|${item.subCategory}`] || 0;
       return `
         <tr>
-          <td>${item.mainCategory}</td>
-          <td>${item.subCategory}</td>
-          <td>${formatMoney(item.amount)}</td>
-          <td>${formatMoney(spent)}</td>
-          <td class="${item.amount - spent >= 0 ? "positive" : "negative"}">${formatMoney(item.amount - spent)}</td>
+          <td data-label="Main">${item.mainCategory}</td>
+          <td data-label="Sub">${item.subCategory}</td>
+          <td data-label="Budget">${formatMoney(item.amount)}</td>
+          <td data-label="Spent">${formatMoney(spent)}</td>
+          <td data-label="Left" class="${item.amount - spent >= 0 ? "positive" : "negative"}">${formatMoney(item.amount - spent)}</td>
         </tr>
       `;
     }).join("")}
@@ -406,6 +418,24 @@ function formatMonthLabel(monthKey) {
     month: "short",
     year: "2-digit"
   });
+}
+
+function getLocalMonthKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function getMonthRange(first, last) {
+  const [firstYear, firstMonth] = first.split("-").map(Number);
+  const [lastYear, lastMonth] = last.split("-").map(Number);
+  const cursor = new Date(firstYear, firstMonth - 1, 1);
+  const end = new Date(lastYear, lastMonth - 1, 1);
+  const months = [];
+  while (cursor <= end) {
+    months.push(`${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}`);
+    cursor.setMonth(cursor.getMonth() + 1);
+  }
+  return months;
 }
 
 function renderRecentTransactions(rows) {

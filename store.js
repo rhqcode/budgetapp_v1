@@ -136,6 +136,12 @@ export async function upsertTransaction(transaction) {
   await saveData(data);
 }
 
+export async function deleteTransaction(id) {
+  const data = loadData();
+  data.transactions = data.transactions.filter(item => item.id !== id);
+  await saveData(data);
+}
+
 export async function upsertAccount(account) {
   const data = loadData();
   const existing = data.accounts.find(item => item.id === account.id);
@@ -183,6 +189,7 @@ export async function deleteIncomeSubCategory(name) {
 window.loadData = loadData;
 window.saveData = saveData;
 window.upsertTransaction = upsertTransaction;
+window.deleteTransaction = deleteTransaction;
 window.upsertAccount = upsertAccount;
 window.deleteAccount = deleteAccount;
 window.upsertBudget = upsertBudget;

@@ -2,15 +2,30 @@ const apiUrl = import.meta.env?.VITE_API_URL || "https://budgetapp-v1-backend.on
 const ID_TOKEN_KEY = "budgetapp_id_token";
 const REFRESH_TOKEN_KEY = "budgetapp_refresh_token";
 
-const getIdToken = () => sessionStorage.getItem(ID_TOKEN_KEY);
-const getRefreshToken = () => sessionStorage.getItem(REFRESH_TOKEN_KEY);
+// localStorage is intentionally used here so a signed-in session is available
+// to every tab on the same BudgetApp origin.
+const getIdToken = () => localStorage.getItem(ID_TOKEN_KEY);
+const getRefreshToken = () => localStorage.getItem(REFRESH_TOKEN_KEY);
+
+function migrateLegacySession() {
+  const idToken = sessionStorage.getItem(ID_TOKEN_KEY);
+  const refreshToken = sessionStorage.getItem(REFRESH_TOKEN_KEY);
+  if (idToken && !getIdToken()) localStorage.setItem(ID_TOKEN_KEY, idToken);
+  if (refreshToken && !getRefreshToken()) localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+  sessionStorage.removeItem(ID_TOKEN_KEY);
+  sessionStorage.removeItem(REFRESH_TOKEN_KEY);
+}
+
+migrateLegacySession();
 
 function storeSession(session) {
-  sessionStorage.setItem(ID_TOKEN_KEY, session.idToken);
-  sessionStorage.setItem(REFRESH_TOKEN_KEY, session.refreshToken);
+  localStorage.setItem(ID_TOKEN_KEY, session.idToken);
+  localStorage.setItem(REFRESH_TOKEN_KEY, session.refreshToken);
 }
 
 function clearSession() {
+  localStorage.removeItem(ID_TOKEN_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
   sessionStorage.removeItem(ID_TOKEN_KEY);
   sessionStorage.removeItem(REFRESH_TOKEN_KEY);
 }

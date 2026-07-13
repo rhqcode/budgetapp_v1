@@ -33,7 +33,8 @@
             <input type="number" step="0.01" id="billsAmount" required>
           </div>
           <div class="form-field full">
-            <button class="primary-btn" type="submit">Add Bill Category</button>
+            <button class="primary-btn" id="billsSubmitBtn" type="submit">Add Bill Category</button>
+            <button class="ghost-btn" id="billsCancelBtn" type="button" hidden>Cancel Edit</button>
           </div>
         </form>
         <table id="billsTable"></table>
@@ -53,7 +54,8 @@
             <input type="number" step="0.01" id="monthlyAmount" required>
           </div>
           <div class="form-field full">
-            <button class="primary-btn" type="submit">Add Monthly Category</button>
+            <button class="primary-btn" id="monthlySubmitBtn" type="submit">Add Monthly Category</button>
+            <button class="ghost-btn" id="monthlyCancelBtn" type="button" hidden>Cancel Edit</button>
           </div>
         </form>
         <table id="monthlyTable"></table>

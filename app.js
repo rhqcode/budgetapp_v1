@@ -155,10 +155,10 @@ function shellMarkup(activePage, authResult) {
         </div>
       </div>
       <nav class="sidebar-nav">
-        <a href="index.html" data-page="dashboard"><span class="nav-icon">⌂</span>Overview</a>
-        <a href="add-transaction.html" data-page="transaction"><span class="nav-icon">＋</span>Add transaction</a>
-        <a href="budget.html" data-page="budget"><span class="nav-icon">⚙</span>Budget and Account Settings</a>
-        <a href="instructions.html" data-page="instructions"><span class="nav-icon">?</span>Instructions</a>
+        <a href="index.html" data-page="dashboard"><span class="nav-icon">⌂</span><span class="nav-label">Overview</span></a>
+        <a href="add-transaction.html" data-page="transaction"><span class="nav-icon">＋</span><span class="nav-label">Add transaction</span></a>
+        <a href="budget.html" data-page="budget"><span class="nav-icon">⚙</span><span class="nav-label">Settings</span></a>
+        <a href="instructions.html" data-page="instructions"><span class="nav-icon">?</span><span class="nav-label">Help</span></a>
       </nav>
       <div class="sidebar-promo">
         <span>Thoughtful finances</span>
@@ -289,6 +289,16 @@ function setupMobilePager() {
   const goTo = index => {
     const safeIndex = Math.max(0, Math.min(pages.length - 1, index));
     pagesWrap.scrollTo({ left: safeIndex * pagesWrap.clientWidth, behavior: "smooth" });
+  };
+
+  window.showMobilePageContaining = element => {
+    const page = element?.closest?.(".mobile-page");
+    const index = pages.indexOf(page);
+    if (index < 0) return false;
+    goTo(index);
+    const scrollTarget = page.querySelector(":scope > .card") || page;
+    scrollTarget.scrollTo({ top: 0, behavior: "smooth" });
+    return true;
   };
 
   prev.addEventListener("click", () => goTo(getActiveIndex() - 1));
