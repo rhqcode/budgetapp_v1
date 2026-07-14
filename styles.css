@@ -1283,6 +1283,7 @@ body:not(.shell-mounted) .main {
   }
   .sidebar {
     flex: 0 0 auto;
+    width: 100%;
     height: auto;
     min-height: 0;
     padding: 12px 15px 0;
@@ -1304,9 +1305,10 @@ body:not(.shell-mounted) .main {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0;
+    width: calc(100% + 30px);
     overflow: visible;
     margin: 0 -15px;
-    padding: 5px 10px 7px;
+    padding: 5px 0 7px;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     background: #352e2a;
   }
@@ -1316,6 +1318,7 @@ body:not(.shell-mounted) .main {
     min-width: 0;
     width: 100%;
     padding: 7px 4px;
+    border-radius: 0;
     font-size: 11px;
   }
   .sidebar-nav .nav-label {
