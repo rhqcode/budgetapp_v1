@@ -1277,21 +1277,44 @@ body:not(.shell-mounted) .main {
 }
 
 @media (max-width: 860px) {
-  .sidebar { height: 104px; padding: 12px 15px; }
+  body.shell-mounted {
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar {
+    flex: 0 0 auto;
+    height: auto;
+    min-height: 0;
+    padding: 12px 15px 0;
+    overflow: visible;
+  }
   .sidebar::after,
   .sidebar-promo { display: none; }
+  .signout-btn {
+    position: absolute;
+    top: 14px;
+    right: 15px;
+    width: auto;
+    margin: 0;
+    padding: 6px 10px;
+  }
   .sidebar-brand { margin-bottom: 8px; }
   .brand-mark { width: 34px; height: 34px; }
   .sidebar-nav {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 4px;
+    gap: 0;
     overflow: visible;
+    margin: 0 -15px;
+    padding: 5px 10px 7px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: #352e2a;
   }
   .sidebar-nav a {
     justify-content: center;
     gap: 5px;
     min-width: 0;
+    width: 100%;
     padding: 7px 4px;
     font-size: 11px;
   }
@@ -1302,7 +1325,13 @@ body:not(.shell-mounted) .main {
     text-overflow: ellipsis;
   }
   .nav-icon { width: 20px; height: 20px; }
-  .main { height: calc(100dvh - 104px); margin-left: 0; padding: 15px; }
+  .main {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+    margin-left: 0;
+    padding: 15px;
+  }
   .page-title { font-size: 26px; }
   .page-subtitle { display: none; }
   .topbar-action { padding: 10px 12px; font-size: 10px; }
@@ -1311,8 +1340,27 @@ body:not(.shell-mounted) .main {
   .welcome-seal { width: 82px; height: 82px; flex: 0 0 auto; margin-left: 12px; }
   .card { border-radius: 16px; }
   .mobile-pager-nav button { border-radius: 999px; }
-  .mobile-page { overflow-y: auto; overscroll-behavior: contain; }
-  .mobile-page > .card { overflow-y: auto; }
+  .mobile-page {
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .mobile-page > .card {
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+  }
+  .mobile-page table {
+    flex: none;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: clip;
+    touch-action: pan-x pan-y;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 @media (max-width: 520px) {

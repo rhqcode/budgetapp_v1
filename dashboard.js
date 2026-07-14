@@ -193,28 +193,30 @@ function renderMonthlyChart(rows) {
 
 function renderHistoricalChart(rows) {
   const monthly = rows.reduce((map, item) => {
-    const month = item.date.slice(0, 7);
+    const month = getMonthKey(item.date);
+    const amount = Number(item.amount);
+    if (!month || !Number.isFinite(amount)) return map;
+
     map[month] = map[month] || { Income: 0, Expense: 0 };
-    map[month][item.type] += Number(item.amount);
+    if (item.type === "Income") map[month].Income += amount;
+    if (item.type === "Expense") map[month].Expense += amount;
     return map;
   }, {});
-  const currentMonth = getLocalMonthKey();
-  const from = document.getElementById("fromDate").value;
-  const to = document.getElementById("toDate").value;
-  if ((!from || from.slice(0, 7) <= currentMonth) && (!to || to.slice(0, 7) >= currentMonth)) {
-    monthly[currentMonth] ||= { Income: 0, Expense: 0 };
-  }
+
   const populatedMonths = Object.keys(monthly).sort();
-  const monthKeys = populatedMonths.length
-    ? getMonthRange(populatedMonths[0], populatedMonths.at(-1))
-    : [];
+  const fromMonth = getMonthKey(document.getElementById("fromDate").value);
+  const toMonth = getMonthKey(document.getElementById("toDate").value);
+  const firstMonth = fromMonth || populatedMonths[0] || toMonth || getLocalMonthKey();
+  const lastMonth = toMonth || populatedMonths.at(-1) || fromMonth || getLocalMonthKey();
+  const monthKeys = firstMonth <= lastMonth ? getMonthRange(firstMonth, lastMonth) : [];
+
   monthKeys.forEach(month => {
     monthly[month] ||= { Income: 0, Expense: 0 };
   });
 
   if (historicalChart) historicalChart.destroy();
   historicalChart = new Chart(document.getElementById("historicalChart"), {
-    type: "line",
+    type: "bar",
     data: {
       labels: monthKeys.map(formatMonthLabel),
       datasets: [
@@ -222,21 +224,23 @@ function renderHistoricalChart(rows) {
           label: "Income",
           data: monthKeys.map(label => monthly[label].Income),
           borderColor: "#6e9478",
-          backgroundColor: "rgba(110, 148, 120, 0.14)",
-          tension: 0.3,
-          fill: true
+          backgroundColor: "rgba(110, 148, 120, 0.78)",
+          borderWidth: 1,
+          borderRadius: 6,
+          maxBarThickness: 42
         },
         {
           label: "Expenses",
           data: monthKeys.map(label => monthly[label].Expense),
           borderColor: "#ce7b62",
-          backgroundColor: "rgba(206, 123, 98, 0.14)",
-          tension: 0.3,
-          fill: true
+          backgroundColor: "rgba(206, 123, 98, 0.78)",
+          borderWidth: 1,
+          borderRadius: 6,
+          maxBarThickness: 42
         }
       ]
     },
-    options: chartOptions()
+    options: chartOptions({ showLegend: true })
   });
 }
 
@@ -393,7 +397,7 @@ function renderCategoryTextBreakdown(rows) {
   }).join("");
 }
 
-function chartOptions() {
+function chartOptions({ showLegend = false } = {}) {
   return {
     maintainAspectRatio: false,
     scales: {
@@ -406,7 +410,11 @@ function chartOptions() {
     },
     plugins: {
       datalabels: { display: false },
-      legend: { display: false },
+      legend: {
+        display: showLegend,
+        position: "bottom",
+        labels: { usePointStyle: true, boxWidth: 8 }
+      },
       tooltip: { callbacks: { label: ctx => formatMoney(ctx.raw) } }
     }
   };
@@ -423,6 +431,11 @@ function formatMonthLabel(monthKey) {
 function getLocalMonthKey() {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function getMonthKey(date) {
+  const match = String(date || "").match(/^(\d{4})-(0[1-9]|1[0-2])/);
+  return match ? `${match[1]}-${match[2]}` : "";
 }
 
 function getMonthRange(first, last) {
