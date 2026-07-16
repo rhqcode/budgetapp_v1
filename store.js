@@ -6,7 +6,8 @@ let remoteEnabled = false;
 const defaultData = {
   profile: {
     displayName: "BudgetApp User",
-    currency: "SGD"
+    currency: "SGD",
+    dataInitialized: true
   },
   accounts: [
     { id: crypto.randomUUID(), name: "Main Bank", type: "Bank" },
@@ -40,7 +41,6 @@ export function loadData() {
 export async function syncRemoteData() {
   const remoteData = await fetchUserData();
   const hadLegacyDemoData = hasLegacyDemoData(remoteData);
-  const needsSeeding = !remoteData.accounts?.length || !remoteData.budgets?.length;
 
   if (hadLegacyDemoData) {
     remoteData.accounts = [];
@@ -52,10 +52,17 @@ export async function syncRemoteData() {
     }
   }
 
-  const data = normalizeData(remoteData);
+  const wasInitialized = remoteData.profile?.dataInitialized === true;
+  const needsSeeding = hadLegacyDemoData || (
+    !wasInitialized && (!remoteData.accounts?.length || !remoteData.budgets?.length)
+  );
+  let data = normalizeData(remoteData, { seedDefaults: needsSeeding });
+  data.profile.dataInitialized = true;
   remoteEnabled = true;
+  if (hadLegacyDemoData || needsSeeding || !wasInitialized) {
+    data = normalizeData(await putUserData(data), { seedDefaults: false });
+  }
   localStorage.setItem(STORE_KEY, JSON.stringify(data));
-  if (hadLegacyDemoData || needsSeeding) await putUserData(data);
   return data;
 }
 
@@ -77,8 +84,9 @@ function hasLegacyDemoData(data) {
   return demoDescriptions.every(description => descriptions.has(description));
 }
 
-function normalizeData(data) {
+function normalizeData(data, { seedDefaults = data?.profile?.dataInitialized !== true } = {}) {
   data.profile = data.profile || { displayName: "BudgetApp User", currency: "SGD" };
+  data.profile.dataInitialized = true;
   data.accounts = data.accounts || [];
   data.budgets = (data.budgets || []).map(item => ({
     id: item.id || crypto.randomUUID(),
@@ -98,13 +106,13 @@ function normalizeData(data) {
     account: item.account || ""
   }));
 
-  if (!data.accounts.length) {
+  if (seedDefaults && !data.accounts.length) {
     data.accounts = [
       { id: crypto.randomUUID(), name: "Main Bank", type: "Bank" },
       { id: crypto.randomUUID(), name: "Credit Card", type: "Credit Card" }
     ];
   }
-  if (!data.budgets.length) {
+  if (seedDefaults && !data.budgets.length) {
     data.budgets = [
       ...["Rent", "Utilities", "Phone", "Insurance", "Internet", "Subscriptions", "Gym", "Childcare", "Loan", "Taxes", "Medical Plan", "Storage"]
         .map(subCategory => ({ id: crypto.randomUUID(), mainCategory: "Bills", subCategory, amount: 0 })),
@@ -117,8 +125,13 @@ function normalizeData(data) {
 }
 
 export async function saveData(data) {
+  if (remoteEnabled) {
+    const saved = normalizeData(await putUserData(data), { seedDefaults: false });
+    localStorage.setItem(STORE_KEY, JSON.stringify(saved));
+    return saved;
+  }
   localStorage.setItem(STORE_KEY, JSON.stringify(data));
-  if (remoteEnabled) await putUserData(data);
+  return data;
 }
 
 export async function upsertTransaction(transaction) {
@@ -145,6 +158,11 @@ export async function deleteTransaction(id) {
 export async function upsertAccount(account) {
   const data = loadData();
   const existing = data.accounts.find(item => item.id === account.id);
+  const duplicate = data.accounts.find(item =>
+    item.id !== account.id &&
+    String(item.name).trim().toLowerCase() === String(account.name).trim().toLowerCase()
+  );
+  if (duplicate) throw new Error(`An account named “${account.name.trim()}” already exists.`);
   if (existing) Object.assign(existing, account);
   else data.accounts.push({ id: crypto.randomUUID(), ...account });
   await saveData(data);
@@ -159,6 +177,12 @@ export async function deleteAccount(id) {
 export async function upsertBudget(budget) {
   const data = loadData();
   const existing = data.budgets.find(item => item.id === budget.id);
+  const duplicate = data.budgets.find(item =>
+    item.id !== budget.id &&
+    item.mainCategory === budget.mainCategory &&
+    String(item.subCategory).trim().toLowerCase() === String(budget.subCategory).trim().toLowerCase()
+  );
+  if (duplicate) throw new Error(`A ${budget.mainCategory} budget named “${budget.subCategory.trim()}” already exists.`);
   if (existing) Object.assign(existing, budget);
   else data.budgets.push({ id: crypto.randomUUID(), ...budget });
   await saveData(data);

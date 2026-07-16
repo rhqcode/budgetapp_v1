@@ -18,12 +18,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 async function saveBudgetForm(event, mainCategory) {
   event.preventDefault();
   const prefix = mainCategory === "Bills" ? "bills" : "monthly";
-  await upsertBudget({
-    ...(editingBudgetIds[mainCategory] ? { id: editingBudgetIds[mainCategory] } : {}),
-    mainCategory,
-    subCategory: document.getElementById(`${prefix}SubCategory`).value.trim(),
-    amount: parseAmount(document.getElementById(`${prefix}Amount`).value)
-  });
+  try {
+    await upsertBudget({
+      ...(editingBudgetIds[mainCategory] ? { id: editingBudgetIds[mainCategory] } : {}),
+      mainCategory,
+      subCategory: document.getElementById(`${prefix}SubCategory`).value.trim(),
+      amount: parseAmount(document.getElementById(`${prefix}Amount`).value)
+    });
+  } catch (error) {
+    setStatus(error.message);
+    return;
+  }
   const wasEditing = Boolean(editingBudgetIds[mainCategory]);
   resetBudgetForm(mainCategory);
   renderBudgetPage();
@@ -56,7 +61,12 @@ function resetBudgetForm(mainCategory) {
 async function saveIncomeSubForm(event) {
   event.preventDefault();
   const name = document.getElementById("incomeSubCategory").value.trim();
-  if (name) await addIncomeSubCategory(name);
+  try {
+    if (name) await addIncomeSubCategory(name);
+  } catch (error) {
+    setStatus(error.message);
+    return;
+  }
   event.target.reset();
   renderBudgetPage();
   setStatus("Income sub category saved");
@@ -64,10 +74,15 @@ async function saveIncomeSubForm(event) {
 
 async function saveAccountForm(event) {
   event.preventDefault();
-  await upsertAccount({
-    name: document.getElementById("accountName").value.trim(),
-    type: document.getElementById("accountType").value
-  });
+  try {
+    await upsertAccount({
+      name: document.getElementById("accountName").value.trim(),
+      type: document.getElementById("accountType").value
+    });
+  } catch (error) {
+    setStatus(error.message);
+    return;
+  }
   event.target.reset();
   renderBudgetPage();
   setStatus("Account saved");
@@ -125,7 +140,12 @@ function renderAccountsTable(accounts) {
 async function removeBudget(id) {
   const item = loadData().budgets.find(budget => budget.id === id);
   if (!item || !window.confirm(`Delete the ${item.subCategory} preset?`)) return;
-  await deleteBudget(id);
+  try {
+    await deleteBudget(id);
+  } catch (error) {
+    setStatus(error.message);
+    return;
+  }
   if (editingBudgetIds[item.mainCategory] === id) resetBudgetForm(item.mainCategory);
   renderBudgetPage();
   setStatus("Preset deleted");
@@ -133,7 +153,12 @@ async function removeBudget(id) {
 
 async function removeIncomeSub(name) {
   if (!window.confirm(`Delete the ${name} income category?`)) return;
-  await deleteIncomeSubCategory(name);
+  try {
+    await deleteIncomeSubCategory(name);
+  } catch (error) {
+    setStatus(error.message);
+    return;
+  }
   renderBudgetPage();
   setStatus("Income category deleted");
 }
@@ -141,7 +166,12 @@ async function removeIncomeSub(name) {
 async function removeAccount(id) {
   const account = loadData().accounts.find(item => item.id === id);
   if (!account || !window.confirm(`Delete the ${account.name} account?`)) return;
-  await deleteAccount(id);
+  try {
+    await deleteAccount(id);
+  } catch (error) {
+    setStatus(error.message);
+    return;
+  }
   renderBudgetPage();
   setStatus("Account deleted");
 }

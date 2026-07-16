@@ -5,7 +5,7 @@ let editingTransactionId = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
   await mountShell("transaction");
-  document.getElementById("txDate").value = new Date().toISOString().slice(0, 10);
+  document.getElementById("txDate").value = getLocalDate();
   renderTransactionOptions();
   document.getElementById("txType").addEventListener("change", renderCategoryOptions);
   document.getElementById("txMainCategory").addEventListener("change", renderSubCategoryOptions);
@@ -20,9 +20,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderTransactionsTable();
 });
 
-function renderTransactionOptions() {
-  document.getElementById("txAccount").innerHTML = getAccounts()
-    .map(account => `<option value="${account}">${account}</option>`)
+function renderTransactionOptions(preferredAccount = "") {
+  const accounts = getAccounts();
+  if (preferredAccount && !accounts.includes(preferredAccount)) accounts.push(preferredAccount);
+  document.getElementById("txAccount").innerHTML = accounts
+    .sort()
+    .map(account => `<option value="${escapeHtml(account)}">${escapeHtml(account)}</option>`)
     .join("");
 
   renderCategoryOptions();
@@ -37,26 +40,35 @@ function renderCategoryOptions() {
   renderSubCategoryOptions();
 }
 
-function renderSubCategoryOptions() {
+function renderSubCategoryOptions(preferredSubCategory = "") {
   const mainCategory = document.getElementById("txMainCategory").value;
   const subCategories = getSubCategories(mainCategory);
+  if (preferredSubCategory && !subCategories.includes(preferredSubCategory)) {
+    subCategories.push(preferredSubCategory);
+  }
   document.getElementById("txSubCategory").innerHTML = subCategories
-    .map(category => `<option value="${category}">${category}</option>`)
+    .sort()
+    .map(category => `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`)
     .join("");
 }
 
 async function saveTransactionForm(event) {
   event.preventDefault();
-  await upsertTransaction({
-    ...(editingTransactionId ? { id: editingTransactionId } : {}),
-    date: document.getElementById("txDate").value,
-    type: document.getElementById("txType").value,
-    mainCategory: document.getElementById("txMainCategory").value,
-    subCategory: document.getElementById("txSubCategory").value,
-    account: document.getElementById("txAccount").value,
-    amount: parseAmount(document.getElementById("txAmount").value),
-    description: document.getElementById("txDescription").value.trim()
-  });
+  try {
+    await upsertTransaction({
+      ...(editingTransactionId ? { id: editingTransactionId } : {}),
+      date: document.getElementById("txDate").value,
+      type: document.getElementById("txType").value,
+      mainCategory: document.getElementById("txMainCategory").value,
+      subCategory: document.getElementById("txSubCategory").value,
+      account: document.getElementById("txAccount").value,
+      amount: parseAmount(document.getElementById("txAmount").value),
+      description: document.getElementById("txDescription").value.trim()
+    });
+  } catch (error) {
+    setStatus(error.message);
+    return;
+  }
 
   const wasEditing = Boolean(editingTransactionId);
   resetTransactionForm();
@@ -67,7 +79,7 @@ async function saveTransactionForm(event) {
 function resetTransactionForm() {
   editingTransactionId = null;
   document.getElementById("transactionForm").reset();
-  document.getElementById("txDate").value = new Date().toISOString().slice(0, 10);
+  document.getElementById("txDate").value = getLocalDate();
   renderTransactionOptions();
   document.getElementById("transactionFormTitle").textContent = "New transaction";
   document.getElementById("saveTransactionBtn").textContent = "Save Transaction";
@@ -81,9 +93,9 @@ function editTransaction(id) {
   editingTransactionId = id;
   document.getElementById("txDate").value = transaction.date;
   document.getElementById("txType").value = transaction.type;
-  renderCategoryOptions();
+  renderTransactionOptions(transaction.account);
   document.getElementById("txMainCategory").value = transaction.mainCategory;
-  renderSubCategoryOptions();
+  renderSubCategoryOptions(transaction.subCategory);
   document.getElementById("txSubCategory").value = transaction.subCategory;
   document.getElementById("txAccount").value = transaction.account;
   document.getElementById("txAmount").value = transaction.amount;
@@ -102,7 +114,12 @@ async function removeTransaction(id) {
   if (!transaction) return;
   if (!window.confirm(`Delete ${transaction.description || transaction.subCategory} transaction?`)) return;
 
-  await deleteTransaction(id);
+  try {
+    await deleteTransaction(id);
+  } catch (error) {
+    setStatus(error.message);
+    return;
+  }
   if (editingTransactionId === id) resetTransactionForm();
   renderTransactionsTable();
   setStatus("Transaction deleted");
@@ -149,4 +166,9 @@ function escapeHtml(value) {
     "'": "&#39;",
     '"': "&quot;"
   })[character]);
+}
+
+function getLocalDate() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 }

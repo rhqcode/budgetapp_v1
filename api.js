@@ -89,13 +89,13 @@ export async function completeSignIn() {
   const code = url.searchParams.get("auth_code");
   if (!code) return;
 
-  url.searchParams.delete("auth_code");
-  window.history.replaceState({}, "", url);
   const session = await request("/auth/exchange", {
     method: "POST",
     body: JSON.stringify({ code })
   }, false);
   storeSession(session);
+  url.searchParams.delete("auth_code");
+  window.history.replaceState({}, "", url);
 }
 
 export const getSignInUrl = () => `${apiUrl}/auth/google`;

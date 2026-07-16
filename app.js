@@ -46,7 +46,7 @@ async function initAuthGate() {
     hideAuthOverlay();
     return { allowed: true, mode: "api", user };
   } catch (error) {
-    if (!error.status || error.status === 401) {
+    if (error.status === 401) {
       showAuthOverlay("signin", null, error.message, () => window.location.assign(getSignInUrl()));
       return new Promise(() => {});
     }
@@ -75,7 +75,7 @@ function showAuthOverlay(state, email, errorMessage, onSignIn) {
     content = `
       <div class="auth-card">
         <div class="auth-brand">BudgetApp</div>
-        <p class="auth-desc">${errorMessage || "Sign in securely to manage your finances"}</p>
+        <p class="auth-desc">${escapeHtml(errorMessage || "Sign in securely to manage your finances")}</p>
         <button class="auth-google-btn" id="googleSignInBtn"><span class="google-mark">G</span> Continue with Google</button>
       </div>
     `;
@@ -84,7 +84,7 @@ function showAuthOverlay(state, email, errorMessage, onSignIn) {
     content = `
       <div class="auth-card">
         <div class="auth-brand">BudgetApp</div>
-        <p class="auth-error">Your account (${email || "unknown"}) is not authorized.</p>
+        <p class="auth-error">Your account (${escapeHtml(email || "unknown")}) is not authorized.</p>
         ${supportEmail ? `<p class="auth-desc">Contact <a href="mailto:${supportEmail}">${supportEmail}</a></p>` : ""}
       </div>
     `;
@@ -92,7 +92,7 @@ function showAuthOverlay(state, email, errorMessage, onSignIn) {
     content = `
       <div class="auth-card">
         <div class="auth-brand">BudgetApp</div>
-        <p class="auth-error">${errorMessage || "Authentication error"}</p>
+        <p class="auth-error">${escapeHtml(errorMessage || "Authentication error")}</p>
         <button class="auth-google-btn" onclick="location.reload()">Try Again</button>
       </div>
     `;
@@ -104,6 +104,16 @@ function showAuthOverlay(state, email, errorMessage, onSignIn) {
   if (state === "signin" && onSignIn) {
     document.getElementById("googleSignInBtn").addEventListener("click", onSignIn);
   }
+}
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>'"]/g, character => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "'": "&#39;",
+    '"': "&quot;"
+  })[character]);
 }
 
 function hideAuthOverlay() {

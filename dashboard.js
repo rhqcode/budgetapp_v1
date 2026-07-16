@@ -23,12 +23,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 function populateDashboardFilters() {
   const accountFilter = document.getElementById("accountFilter");
+  const data = loadData();
 
   renderCheckboxMenu("mainCategoryMenu", ["Bills", "Monthly Expenses", "Income"], selectedMainCategories, "toggleMainCategory");
   populateSubCategoryFilter();
 
+  const accounts = Array.from(new Set([
+    ...getAccounts(),
+    ...data.transactions.map(item => item.account).filter(Boolean)
+  ])).sort();
   accountFilter.innerHTML = `<option value="">All accounts</option>` +
-    getAccounts().map(item => `<option value="${item}">${item}</option>`).join("");
+    accounts.map(item => `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`).join("");
   updateFilterLabels();
 }
 
@@ -36,7 +41,14 @@ function populateSubCategoryFilter() {
   const mainCategories = selectedMainCategories.length
     ? selectedMainCategories
     : ["Bills", "Monthly Expenses", "Income"];
-  const subCategories = Array.from(new Set(mainCategories.flatMap(category => getSubCategories(category)))).sort();
+  const transactionCategories = loadData().transactions
+    .filter(item => mainCategories.includes(item.mainCategory))
+    .map(item => item.subCategory)
+    .filter(Boolean);
+  const subCategories = Array.from(new Set([
+    ...mainCategories.flatMap(category => getSubCategories(category)),
+    ...transactionCategories
+  ])).sort();
   selectedSubCategories = selectedSubCategories.filter(item => subCategories.includes(item));
   renderCheckboxMenu("categoryMenu", subCategories, selectedSubCategories, "toggleSubCategory");
   updateFilterLabels();
@@ -47,8 +59,8 @@ function renderCheckboxMenu(menuId, options, selectedValues, handlerName) {
   document.getElementById(menuId).innerHTML = options
     .map(item => `
       <label class="filter-option">
-        <input type="checkbox" value="${item}" ${selected.has(item) ? "checked" : ""} onchange="${handlerName}(this.value, this.checked)">
-        <span>${item}</span>
+        <input type="checkbox" value="${escapeHtml(item)}" ${selected.has(item) ? "checked" : ""} onchange="${handlerName}(this.value, this.checked)">
+        <span>${escapeHtml(item)}</span>
       </label>
     `)
     .join("");
@@ -145,7 +157,7 @@ function renderDashboard() {
   renderCategoryChart(expenses);
   renderCategoryTextBreakdown(expenses);
   renderHistoricalChart(allRows);
-  renderBudgetDashboard();
+  renderBudgetDashboard(expenses);
   renderRecentTransactions(allRows);
 }
 
@@ -244,20 +256,36 @@ function renderHistoricalChart(rows) {
   });
 }
 
-function renderBudgetDashboard() {
+function renderBudgetDashboard(expenses) {
   const data = loadData();
   const month = getLocalMonthKey();
-  const spentByCategory = data.transactions
-    .filter(item => item.type === "Expense" && item.date.slice(0, 7) === month)
+  const hasDateFilter = Boolean(
+    document.getElementById("fromDate").value || document.getElementById("toDate").value
+  );
+  const filteredBudgets = data.budgets.filter(item => {
+    if (selectedMainCategories.length && !selectedMainCategories.includes(item.mainCategory)) return false;
+    if (selectedSubCategories.length && !selectedSubCategories.includes(item.subCategory)) return false;
+    return true;
+  });
+  const spentByCategory = expenses
+    .filter(item => hasDateFilter || getMonthKey(item.date) === month)
     .reduce((map, item) => {
       const key = `${item.mainCategory}|${item.subCategory}`;
       map[key] = (map[key] || 0) + Number(item.amount);
       return map;
     }, {});
 
-  const labels = data.budgets.map(item => item.subCategory);
-  const budgetValues = data.budgets.map(item => Number(item.amount));
-  const spentValues = data.budgets.map(item => spentByCategory[`${item.mainCategory}|${item.subCategory}`] || 0);
+  const labels = filteredBudgets.map(item => item.subCategory);
+  const budgetMonthCount = getBudgetMonthCount(expenses, hasDateFilter);
+  const budgetValues = filteredBudgets.map(item => Number(item.amount) * budgetMonthCount);
+  const spentValues = filteredBudgets.map(item => spentByCategory[`${item.mainCategory}|${item.subCategory}`] || 0);
+
+  document.getElementById("budgetChartTitle").textContent = hasDateFilter
+    ? "Budget vs Spent — Selected Period"
+    : "Budget vs Spent This Month";
+  document.getElementById("budgetBalanceTitle").textContent = hasDateFilter
+    ? "Budget Balance — Selected Period"
+    : "Budget Balance";
 
   if (budgetChart) budgetChart.destroy();
   budgetChart = new Chart(document.getElementById("budgetChart"), {
@@ -266,27 +294,52 @@ function renderBudgetDashboard() {
       labels,
       datasets: [
         { label: "Budget", data: budgetValues, backgroundColor: "#d1ad59", borderRadius: 8 },
-        { label: "Spent", data: spentValues, backgroundColor: "#b95735", borderRadius: 8 }
+        {
+          label: "Spent",
+          data: spentValues,
+          backgroundColor: "#b95735",
+          borderRadius: 8,
+          datalabels: {
+            display: context => spentValues[context.dataIndex] > budgetValues[context.dataIndex],
+            anchor: "end",
+            align: "end",
+            color: "#8c2f16",
+            font: { weight: "700", size: 11 },
+            formatter: value => formatMoney(value)
+          }
+        }
       ]
     },
-    options: chartOptions()
+    options: chartOptions({ showLegend: true })
   });
 
   document.getElementById("budgetBalanceTable").innerHTML = `
     <tr><th>Main</th><th>Sub</th><th>Budget</th><th>Spent</th><th>Left</th></tr>
-    ${data.budgets.map(item => {
+    ${filteredBudgets.map(item => {
       const spent = spentByCategory[`${item.mainCategory}|${item.subCategory}`] || 0;
       return `
         <tr>
-          <td data-label="Main">${item.mainCategory}</td>
-          <td data-label="Sub">${item.subCategory}</td>
-          <td data-label="Budget">${formatMoney(item.amount)}</td>
+          <td data-label="Main">${escapeHtml(item.mainCategory)}</td>
+          <td data-label="Sub">${escapeHtml(item.subCategory)}</td>
+          <td data-label="Budget">${formatMoney(Number(item.amount) * budgetMonthCount)}</td>
           <td data-label="Spent">${formatMoney(spent)}</td>
-          <td data-label="Left" class="${item.amount - spent >= 0 ? "positive" : "negative"}">${formatMoney(item.amount - spent)}</td>
+          <td data-label="Left" class="${item.amount * budgetMonthCount - spent >= 0 ? "positive" : "negative"}">${formatMoney(item.amount * budgetMonthCount - spent)}</td>
         </tr>
       `;
     }).join("")}
   `;
+}
+
+function getBudgetMonthCount(expenses, hasDateFilter) {
+  if (!hasDateFilter) return 1;
+
+  const expenseMonths = Array.from(new Set(expenses.map(item => getMonthKey(item.date)).filter(Boolean))).sort();
+  const fromMonth = getMonthKey(document.getElementById("fromDate").value);
+  const toMonth = getMonthKey(document.getElementById("toDate").value);
+  const firstMonth = fromMonth || expenseMonths[0] || toMonth;
+  const lastMonth = toMonth || expenseMonths.at(-1) || fromMonth;
+  if (!firstMonth || !lastMonth || firstMonth > lastMonth) return 0;
+  return getMonthRange(firstMonth, lastMonth).length;
 }
 
 function renderCategoryChart(rows) {
@@ -373,7 +426,7 @@ function renderCategoryTextBreakdown(rows) {
 
   list.innerHTML = `
     <div class="insight-summary">
-      <strong>${top.label}</strong>
+      <strong>${escapeHtml(top.label)}</strong>
       <span>Largest spending category at ${formatMoney(top.absoluteAmount)}, making up ${topShare.toFixed(1)}% of selected expenses.</span>
     </div>
     <div class="insight-mini-grid">
@@ -388,7 +441,7 @@ function renderCategoryTextBreakdown(rows) {
     return `
       <div class="category-text-row">
         <div>
-          <strong>${item.label}</strong>
+          <strong>${escapeHtml(item.label)}</strong>
           <span>${categoryType} | ${share}% share | ${item.count} entries | Avg ${formatMoney(item.avg)}</span>
         </div>
         <em class="negative">${formatMoney(item.amount)}</em>
@@ -458,16 +511,26 @@ function renderRecentTransactions(rows) {
     <tr><th>Date</th><th>Type</th><th>Main</th><th>Sub</th><th>Description</th><th>Account</th><th>Amount</th></tr>
     ${sortedRows.map(item => `
       <tr>
-        <td>${item.date}</td>
-        <td>${item.type}</td>
-        <td>${item.mainCategory}</td>
-        <td>${item.subCategory}</td>
-        <td>${item.description || ""}</td>
-        <td>${item.account}</td>
+        <td>${escapeHtml(item.date)}</td>
+        <td>${escapeHtml(item.type)}</td>
+        <td>${escapeHtml(item.mainCategory)}</td>
+        <td>${escapeHtml(item.subCategory)}</td>
+        <td>${escapeHtml(item.description || "")}</td>
+        <td>${escapeHtml(item.account)}</td>
         <td class="${item.type === "Income" ? "positive" : "negative"}">${formatMoney(item.amount)}</td>
       </tr>
     `).join("")}
   `;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>'"]/g, character => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "'": "&#39;",
+    '"': "&quot;"
+  })[character]);
 }
 
 // Bridge to window for inline onclick handlers
