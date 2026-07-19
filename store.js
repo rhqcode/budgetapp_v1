@@ -91,16 +91,16 @@ function normalizeData(data, { seedDefaults = data?.profile?.dataInitialized !==
   data.budgets = (data.budgets || []).map(item => ({
     id: item.id || crypto.randomUUID(),
     mainCategory: item.mainCategory || (item.category === "Bills" ? "Bills" : "Monthly Expenses"),
-    subCategory: item.subCategory || item.category || "Other",
+    subCategory: String(item.subCategory || item.category || "Other"),
     amount: Number(item.amount) || 0
   }));
-  data.incomeSubCategories = data.incomeSubCategories || ["Salary", "Bonus", "Dividend", "Interest", "Side Income"];
+  data.incomeSubCategories = (data.incomeSubCategories || ["Salary", "Bonus", "Dividend", "Interest", "Side Income"]).map(item => String(item).trim()).filter(Boolean);
   data.transactions = (data.transactions || []).map(item => ({
     id: item.id || crypto.randomUUID(),
     date: item.date,
     type: item.type || (item.mainCategory === "Income" ? "Income" : "Expense"),
     mainCategory: item.mainCategory || (item.type === "Income" ? "Income" : "Monthly Expenses"),
-    subCategory: item.subCategory || item.category || "Other",
+    subCategory: String(item.subCategory || item.category || "Other"),
     description: item.description || "",
     amount: Number(item.amount) || 0,
     account: item.account || ""
@@ -120,6 +120,7 @@ function normalizeData(data, { seedDefaults = data?.profile?.dataInitialized !==
         .map(subCategory => ({ id: crypto.randomUUID(), mainCategory: "Monthly Expenses", subCategory, amount: 0 }))
     ];
   }
+
 
   return data;
 }
